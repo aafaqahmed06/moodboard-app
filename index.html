@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<title>Mood Board — Heart–Brain Axis Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#6B1420;
+    --maroon-dark:#480D16;
+    --gold:#C99A3E;
+    --gold-soft:#E4C989;
+    --cream:#F6F1E7;
+    --paper:#FFFCF6;
+    --ink:#2B211D;
+    --ink-soft:#6b5f57;
+    --coherent:#2F6F6B;
+    --incoherent:#B23A2E;
+    --line:#E4DACB;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{
+    height:100%;
+    margin:0;
+    overscroll-behavior:none;
+  }
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.45;
+  }
+  h1,h2{font-family:'Source Serif 4',serif;margin:0;}
+  button{font-family:inherit;}
+
+  .topbar{
+    height:46px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 1rem;
+    background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);
+    border-bottom:3px solid var(--gold);
+    color:var(--paper);
+  }
+  .topbar .brand{
+    font-size:0.82rem;
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .topbar .back-btn{
+    background:none;
+    border:none;
+    color:var(--gold-soft);
+    font-size:0.82rem;
+    font-weight:600;
+    padding:0.3rem 0.2rem;
+    cursor:pointer;
+  }
+
+  #app{
+    height:100dvh;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    max-width:520px;
+    margin:0 auto;
+    overflow:hidden;
+  }
+
+  .screen{
+    display:none;
+    flex-direction:column;
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .screen.active{display:flex;}
+
+  /* ---- Screen 1: mood select ---- */
+  #screen-select .content{
+    padding:1.2rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
+    flex:1;
+    display:flex;
+    flex-direction:column;
+  }
+  #screen-select h1{
+    font-size:1.35rem;
+    font-weight:700;
+    margin-bottom:0.3rem;
+  }
+  #screen-select .sub{
+    font-size:0.88rem;
+    color:var(--ink-soft);
+    margin:0 0 1.1rem;
+  }
+  .mood-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.7rem;
+    flex:1;
+  }
+  .mood-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    min-height:108px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:0.35rem;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .mood-card:active{
+    transform:scale(0.96);
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(201,154,62,0.18);
+  }
+  .mood-card .emoji{font-size:1.9rem;}
+  .mood-card .label{font-size:0.92rem;font-weight:600;}
+  .select-footnote{
+    text-align:center;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    margin-top:1rem;
+  }
+
+  /* ---- Screen 2: loading ---- */
+  #screen-loading{
+    align-items:center;
+    justify-content:center;
+  }
+  .loading-inner{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1.4rem;
+    padding:2rem;
+    text-align:center;
+  }
+  .pulse-wrap{
+    position:relative;
+    width:88px;height:88px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pulse-ring{
+    position:absolute;
+    inset:0;
+    border:3px solid var(--maroon);
+    border-radius:50%;
+    animation:pulse 1.4s ease-out infinite;
+  }
+  .pulse-ring.d2{animation-delay:0.45s;}
+  .pulse-core{
+    width:40px;height:40px;
+    border-radius:50%;
+    background:var(--maroon);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;
+  }
+  @keyframes pulse{
+    0%{transform:scale(0.5);opacity:0.9;}
+    100%{transform:scale(1.6);opacity:0;}
+  }
+  #loadingStatus{
+    font-size:0.94rem;
+    font-weight:500;
+    color:var(--ink-soft);
+    min-height:1.4em;
+  }
+  .load-bar{
+    width:180px;
+    height:4px;
+    background:var(--line);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .load-bar-fill{
+    height:100%;
+    width:0%;
+    background:var(--gold);
+    border-radius:2px;
+    animation:fill 3s linear forwards;
+  }
+  @keyframes fill{ to{ width:100%; } }
+
+  /* ---- Screen 3: dashboard ---- */
+  #screen-dashboard .content{
+    padding:1rem 1.1rem calc(1.4rem + env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+    gap:0.9rem;
+  }
+  .mood-chip{
+    align-self:flex-start;
+    display:flex;
+    align-items:center;
+    gap:0.45rem;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:0.35rem 0.8rem 0.35rem 0.55rem;
+    font-size:0.88rem;
+    font-weight:600;
+  }
+  .mood-chip .emoji{font-size:1.15rem;}
+
+  canvas#rhythmCanvas{
+    width:100%;
+    height:120px;
+    display:block;
+    border-radius:8px;
+    background:var(--paper);
+    border:1px solid var(--line);
+  }
+
+  .stat-pair{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.7rem;
+  }
+  .stat-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:0.75rem 0.85rem;
+  }
+  .stat-value{
+    display:block;
+    font-family:'Source Serif 4',serif;
+    font-size:1.55rem;
+    font-weight:700;
+  }
+  .stat-label{
+    display:block;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    margin-top:0.15rem;
+  }
+
+  .modulator-row{
+    display:flex;
+    align-items:center;
+    gap:0.55rem;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:0.7rem 0.85rem;
+  }
+  .modulator-row .dot{
+    width:10px;height:10px;border-radius:50%;flex:0 0 auto;
+  }
+  .modulator-row .mtext{font-size:0.86rem;}
+  .modulator-row .mtext b{display:block;font-size:0.94rem;}
+
+  .note-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:6px;
+    padding:0.75rem 0.9rem;
+    font-size:0.86rem;
+    color:var(--ink);
+  }
+
+  .new-reading-btn{
+    margin-top:0.2rem;
+    width:100%;
+    padding:0.85rem;
+    background:var(--maroon);
+    color:var(--paper);
+    border:none;
+    border-radius:8px;
+    font-size:0.95rem;
+    font-weight:600;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .new-reading-btn:active{background:var(--maroon-dark);}
+
+  .demo-disclaimer{
+    font-size:0.68rem;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- SCREEN 1: mood selection -->
+  <section id="screen-select" class="screen active">
+    <div class="topbar"><span class="brand">Mood Board · Heart&ndash;Brain Demo</span><span></span></div>
+    <div class="content">
+      <h1>How are you feeling right now?</h1>
+      <p class="sub">Tap a mood to log it.</p>
+      <div class="mood-grid" id="moodGrid"></div>
+      <p class="select-footnote">Demo — physiological readout is simulated, not measured</p>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: loading -->
+  <section id="screen-loading" class="screen">
+    <div class="loading-inner">
+      <div class="pulse-wrap">
+        <div class="pulse-ring"></div>
+        <div class="pulse-ring d2"></div>
+        <div class="pulse-core">&#10084;</div>
+      </div>
+      <p id="loadingStatus">Reading HRV signal&hellip;</p>
+      <div class="load-bar"><div class="load-bar-fill"></div></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: dashboard -->
+  <section id="screen-dashboard" class="screen">
+    <div class="topbar">
+      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <button class="back-btn" id="backBtn">New reading</button>
+    </div>
+    <div class="content">
+      <div class="mood-chip" id="dashMoodChip"></div>
+      <canvas id="rhythmCanvas" width="600" height="120"></canvas>
+      <div class="stat-pair">
+        <div class="stat-card">
+          <span class="stat-value" id="coherenceValue">&mdash;</span>
+          <span class="stat-label">Coherence index</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="hrValue">&mdash;</span>
+          <span class="stat-label">Residual HR (sim.)</span>
+        </div>
+      </div>
+      <div class="modulator-row">
+        <span class="dot" id="modDot"></span>
+        <span class="mtext">Primary modulator<b id="modName">&mdash;</b></span>
+      </div>
+      <div class="note-card" id="noteCard"></div>
+      <button class="new-reading-btn" id="newReadingBtn">Log another mood</button>
+      <p class="demo-disclaimer">Rhythm, coherence, HR and modulator values are computed from the selected mood category for demo purposes — not measured from a wearable device.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  const MOODS = [
+    {key:'calm',        label:'Calm',        emoji:'\u{1F9D8}', group:'coherent',   coherenceRange:[82,92], hrRange:[61,67], modulator:'Oxytocin',              note:'Vagal tone rises — the waveform reads smooth and coherent, in line with the calm/gratitude/compassion pattern in the poster.'},
+    {key:'gratitude',   label:'Gratitude',   emoji:'\u{1F64F}', group:'coherent',   coherenceRange:[80,90], hrRange:[63,69], modulator:'Oxytocin & Serotonin',  note:'Positive affect and reward signalling — stable rhythm, efficient recovery after any prior stressor.'},
+    {key:'compassion',  label:'Compassion',  emoji:'\u{1F49D}', group:'coherent',   coherenceRange:[78,88], hrRange:[64,70], modulator:'Oxytocin',              note:'Social bonding response — vagal tone up, low-jitter waveform.'},
+    {key:'frustration', label:'Frustration', emoji:'\u{1F624}', group:'incoherent', coherenceRange:[22,34], hrRange:[82,91], modulator:'Cortisol',              note:'Sustained psychogenic stress — rhythm reshaped, coherence index drops sharply.'},
+    {key:'anxiety',     label:'Anxiety',     emoji:'\u{1F630}', group:'incoherent', coherenceRange:[16,28], hrRange:[86,96], modulator:'Cortisol & Epinephrine',note:'Sympathetic arousal — erratic, high-frequency rhythm, matching the incoherent pattern in the poster.'},
+    {key:'anger',       label:'Anger',       emoji:'\u{1F620}', group:'incoherent', coherenceRange:[12,24], hrRange:[90,100],modulator:'Epinephrine',           note:'Acute fight-or-flight signalling — rate and force rise, rhythm turns erratic.'}
+  ];
+
+  const screens = {
+    select: document.getElementById('screen-select'),
+    loading: document.getElementById('screen-loading'),
+    dashboard: document.getElementById('screen-dashboard')
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  function rand(min,max){ return Math.round(min + Math.random()*(max-min)); }
+  function coherenceColor(c){
+    const t = c/100;
+    const from=[178,58,46], to=[47,111,107];
+    const r=Math.round(from[0]+(to[0]-from[0])*t);
+    const g=Math.round(from[1]+(to[1]-from[1])*t);
+    const b=Math.round(from[2]+(to[2]-from[2])*t);
+    return 'rgb('+r+','+g+','+b+')';
+  }
+
+  // ---- build mood grid ----
+  const moodGrid = document.getElementById('moodGrid');
+  MOODS.forEach(function(m){
+    const card = document.createElement('button');
+    card.className = 'mood-card';
+    card.type = 'button';
+    card.innerHTML = '<span class="emoji">'+m.emoji+'</span><span class="label">'+m.label+'</span>';
+    card.addEventListener('click', function(){ selectMood(m); });
+    moodGrid.appendChild(card);
+  });
+
+  // ---- loading status cycling ----
+  const loadingStatus = document.getElementById('loadingStatus');
+  const statuses = ['Reading HRV signal\u2026','Filtering motion artefact\u2026','Cross-referencing mood-board entry\u2026'];
+  let statusTimer = null;
+
+  let currentReading = null;
+  let animRunning = false;
+  let coherenceAnim = 50, targetCoherence = 50, phase = 0;
+
+  function selectMood(m){
+    const coherence = rand(m.coherenceRange[0], m.coherenceRange[1]);
+    const hr = rand(m.hrRange[0], m.hrRange[1]);
+    currentReading = Object.assign({}, m, {coherence:coherence, hr:hr});
+
+    showScreen('loading');
+    let i = 0;
+    loadingStatus.textContent = statuses[0];
+    clearInterval(statusTimer);
+    statusTimer = setInterval(function(){
+      i = (i+1) % statuses.length;
+      loadingStatus.textContent = statuses[i];
+    }, 1000);
+
+    setTimeout(function(){
+      clearInterval(statusTimer);
+      renderDashboard(currentReading);
+      showScreen('dashboard');
+    }, 3000);
+  }
+
+  function renderDashboard(r){
+    document.getElementById('dashMoodChip').innerHTML = '<span class="emoji">'+r.emoji+'</span><span>'+r.label+'</span>';
+    document.getElementById('coherenceValue').textContent = r.coherence;
+    document.getElementById('coherenceValue').style.color = coherenceColor(r.coherence);
+    document.getElementById('hrValue').textContent = r.hr+' bpm';
+    document.getElementById('modName').textContent = r.modulator;
+    document.getElementById('modDot').style.background = coherenceColor(r.coherence);
+    document.getElementById('noteCard').textContent = r.note;
+    targetCoherence = r.coherence;
+    if(!animRunning){
+      animRunning = true;
+      requestAnimationFrame(drawLoop);
+    }
+  }
+
+  const canvas = document.getElementById('rhythmCanvas');
+  const ctx = canvas.getContext('2d');
+  function drawLoop(){
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    coherenceAnim += (targetCoherence - coherenceAnim) * 0.05;
+    const jitter = (100-coherenceAnim)/100;
+    const color = coherenceColor(coherenceAnim);
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    const mid = h/2, amp = h*0.32;
+    for(let x=0; x<=w; x+=2){
+      const freq = 0.045 + jitter*0.05;
+      let y = mid + Math.sin((x*freq)+phase) * amp * (1-jitter*0.25);
+      y += (Math.random()-0.5) * jitter * amp * 0.9;
+      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    phase += 0.11;
+    requestAnimationFrame(drawLoop);
+  }
+
+  document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select'); });
+  document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select'); });
+})();
+</script>
+</body>
+</html>
