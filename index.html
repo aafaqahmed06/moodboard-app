@@ -246,20 +246,62 @@
     margin-top:0.15rem;
   }
 
-  .modulator-row{
-    display:flex;
-    align-items:center;
-    gap:0.55rem;
+  .modulator-panel{
     background:var(--paper);
     border:1px solid var(--line);
     border-radius:8px;
-    padding:0.7rem 0.85rem;
+    padding:0.85rem 0.9rem 0.9rem;
   }
-  .modulator-row .dot{
-    width:10px;height:10px;border-radius:50%;flex:0 0 auto;
+  .modulator-panel h2{
+    font-family:'Inter',sans-serif;
+    font-size:0.72rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    margin-bottom:0.75rem;
   }
-  .modulator-row .mtext{font-size:0.86rem;}
-  .modulator-row .mtext b{display:block;font-size:0.94rem;}
+  .horm{ margin-bottom:0.78rem; }
+  .horm:last-child{ margin-bottom:0; }
+  .horm-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    font-size:0.85rem;
+    margin-bottom:0.3rem;
+  }
+  .horm-name{ font-weight:600; display:flex; align-items:center; gap:0.4rem; }
+  .horm-name .primary-tag{
+    font-size:0.58rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--maroon);
+    border:1px solid var(--gold);
+    background:var(--cream);
+    border-radius:4px;
+    padding:0.04rem 0.32rem;
+  }
+  .horm-level{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .horm-track{
+    height:8px;
+    background:var(--line);
+    border-radius:5px;
+    overflow:hidden;
+  }
+  .horm-fill{
+    height:100%;
+    width:0%;
+    border-radius:5px;
+    transition:width 0.9s cubic-bezier(.2,.7,.2,1);
+  }
+  .horm.is-primary .horm-track{
+    box-shadow:0 0 0 2px rgba(201,154,62,0.35);
+  }
 
   .note-card{
     background:var(--paper);
@@ -340,13 +382,13 @@
           <span class="stat-label">Residual HR (sim.)</span>
         </div>
       </div>
-      <div class="modulator-row">
-        <span class="dot" id="modDot"></span>
-        <span class="mtext">Primary modulator<b id="modName">&mdash;</b></span>
+      <div class="modulator-panel">
+        <h2>Biochemical modulators</h2>
+        <div id="hormoneList"></div>
       </div>
       <div class="note-card" id="noteCard"></div>
       <button class="new-reading-btn" id="newReadingBtn">Log another mood</button>
-      <p class="demo-disclaimer">Rhythm, coherence, HR and modulator values are computed from the selected mood category for demo purposes — not measured from a wearable device.</p>
+      <p class="demo-disclaimer">Rhythm, coherence, HR and modulator levels are computed from the selected mood category for demo purposes — not measured from a wearable device.</p>
     </div>
   </section>
 
@@ -354,13 +396,23 @@
 
 <script>
 (function(){
+  // Relative presence (0–100) of each modulator for a given mood. Same four
+  // hormones are shown for every mood so the bars can be read side by side;
+  // `primary` flags the one(s) the poster's Table 1 calls the main driver.
+  const HORMONES = [
+    {key:'oxytocin',    name:'Oxytocin',    color:'#2F6F6B'},
+    {key:'serotonin',   name:'Serotonin',   color:'#4E8A5B'},
+    {key:'cortisol',    name:'Cortisol',    color:'#C0762E'},
+    {key:'epinephrine', name:'Epinephrine', color:'#B23A2E'}
+  ];
+
   const MOODS = [
-    {key:'calm',        label:'Calm',        emoji:'\u{1F9D8}', group:'coherent',   coherenceRange:[82,92], hrRange:[61,67], modulator:'Oxytocin',              note:'Vagal tone rises — the waveform reads smooth and coherent, in line with the calm/gratitude/compassion pattern in the poster.'},
-    {key:'gratitude',   label:'Gratitude',   emoji:'\u{1F64F}', group:'coherent',   coherenceRange:[80,90], hrRange:[63,69], modulator:'Oxytocin & Serotonin',  note:'Positive affect and reward signalling — stable rhythm, efficient recovery after any prior stressor.'},
-    {key:'compassion',  label:'Compassion',  emoji:'\u{1F49D}', group:'coherent',   coherenceRange:[78,88], hrRange:[64,70], modulator:'Oxytocin',              note:'Social bonding response — vagal tone up, low-jitter waveform.'},
-    {key:'frustration', label:'Frustration', emoji:'\u{1F624}', group:'incoherent', coherenceRange:[22,34], hrRange:[82,91], modulator:'Cortisol',              note:'Sustained psychogenic stress — rhythm reshaped, coherence index drops sharply.'},
-    {key:'anxiety',     label:'Anxiety',     emoji:'\u{1F630}', group:'incoherent', coherenceRange:[16,28], hrRange:[86,96], modulator:'Cortisol & Epinephrine',note:'Sympathetic arousal — erratic, high-frequency rhythm, matching the incoherent pattern in the poster.'},
-    {key:'anger',       label:'Anger',       emoji:'\u{1F620}', group:'incoherent', coherenceRange:[12,24], hrRange:[90,100],modulator:'Epinephrine',           note:'Acute fight-or-flight signalling — rate and force rise, rhythm turns erratic.'}
+    {key:'calm',        label:'Calm',        emoji:'\u{1F9D8}', group:'coherent',   coherenceRange:[82,92], hrRange:[61,67], primary:['oxytocin'],                hormones:{oxytocin:78, serotonin:64, cortisol:20, epinephrine:14}, note:'Vagal tone rises — the waveform reads smooth and coherent, in line with the calm/gratitude/compassion pattern in the poster.'},
+    {key:'gratitude',   label:'Gratitude',   emoji:'\u{1F64F}', group:'coherent',   coherenceRange:[80,90], hrRange:[63,69], primary:['oxytocin','serotonin'],    hormones:{oxytocin:70, serotonin:74, cortisol:24, epinephrine:18}, note:'Positive affect and reward signalling — stable rhythm, efficient recovery after any prior stressor.'},
+    {key:'compassion',  label:'Compassion',  emoji:'\u{1F49D}', group:'coherent',   coherenceRange:[78,88], hrRange:[64,70], primary:['oxytocin'],                hormones:{oxytocin:82, serotonin:56, cortisol:27, epinephrine:21}, note:'Social bonding response — vagal tone up, low-jitter waveform.'},
+    {key:'frustration', label:'Frustration', emoji:'\u{1F624}', group:'incoherent', coherenceRange:[22,34], hrRange:[82,91], primary:['cortisol'],                hormones:{oxytocin:24, serotonin:31, cortisol:76, epinephrine:54}, note:'Sustained psychogenic stress — rhythm reshaped, coherence index drops sharply.'},
+    {key:'anxiety',     label:'Anxiety',     emoji:'\u{1F630}', group:'incoherent', coherenceRange:[16,28], hrRange:[86,96], primary:['cortisol','epinephrine'],  hormones:{oxytocin:18, serotonin:24, cortisol:82, epinephrine:79}, note:'Sympathetic arousal — erratic, high-frequency rhythm, matching the incoherent pattern in the poster.'},
+    {key:'anger',       label:'Anger',       emoji:'\u{1F620}', group:'incoherent', coherenceRange:[12,24], hrRange:[90,100],primary:['epinephrine'],             hormones:{oxytocin:15, serotonin:21, cortisol:63, epinephrine:89}, note:'Acute fight-or-flight signalling — rate and force rise, rhythm turns erratic.'}
   ];
 
   const screens = {
@@ -374,6 +426,13 @@
   }
 
   function rand(min,max){ return Math.round(min + Math.random()*(max-min)); }
+  function hormoneLabel(v){
+    if(v>=70) return 'High';
+    if(v>=45) return 'Elevated';
+    if(v>=30) return 'Moderate';
+    if(v>=18) return 'Low';
+    return 'Baseline';
+  }
   function coherenceColor(c){
     const t = c/100;
     const from=[178,58,46], to=[47,111,107];
@@ -429,14 +488,37 @@
     document.getElementById('coherenceValue').textContent = r.coherence;
     document.getElementById('coherenceValue').style.color = coherenceColor(r.coherence);
     document.getElementById('hrValue').textContent = r.hr+' bpm';
-    document.getElementById('modName').textContent = r.modulator;
-    document.getElementById('modDot').style.background = coherenceColor(r.coherence);
+    renderHormones(r);
     document.getElementById('noteCard').textContent = r.note;
     targetCoherence = r.coherence;
     if(!animRunning){
       animRunning = true;
       requestAnimationFrame(drawLoop);
     }
+  }
+
+  const hormoneList = document.getElementById('hormoneList');
+  function renderHormones(r){
+    hormoneList.innerHTML = '';
+    HORMONES.forEach(function(H){
+      const v = Math.max(0, Math.min(100, r.hormones[H.key] || 0));
+      const isPrimary = (r.primary || []).indexOf(H.key) !== -1;
+      const row = document.createElement('div');
+      row.className = 'horm' + (isPrimary ? ' is-primary' : '');
+      row.innerHTML =
+        '<div class="horm-head">' +
+          '<span class="horm-name">' + H.name +
+            (isPrimary ? '<span class="primary-tag">Primary</span>' : '') +
+          '</span>' +
+          '<span class="horm-level">' + hormoneLabel(v) + ' · ' + v + '</span>' +
+        '</div>' +
+        '<div class="horm-track"><div class="horm-fill" style="background:' + H.color + '"></div></div>';
+      hormoneList.appendChild(row);
+      const fill = row.querySelector('.horm-fill');
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){ fill.style.width = v + '%'; });
+      });
+    });
   }
 
   const canvas = document.getElementById('rhythmCanvas');
