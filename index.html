@@ -79,8 +79,15 @@
     min-height:0;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
+    opacity:1;
+    transition:opacity 0.28s ease;
   }
   .screen.active{display:flex;}
+  .screen.fade-out{opacity:0;}
+  .screen.fade-in{opacity:0;}
+  @media (prefers-reduced-motion:reduce){
+    .screen{transition:none;}
+  }
 
   /* ---- Screen 1: mood select ---- */
   #screen-select .content{
@@ -501,9 +508,28 @@
     dashboard: document.getElementById('screen-dashboard'),
     history: document.getElementById('screen-history')
   };
-  function showScreen(name){
-    Object.values(screens).forEach(s=>s.classList.remove('active'));
-    screens[name].classList.add('active');
+  let screenAnimTimer = null;
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  function showScreen(name, animate){
+    const next = screens[name];
+    const current = Object.values(screens).find(function(s){ return s.classList.contains('active'); });
+    if(current === next) return;
+    clearTimeout(screenAnimTimer);
+
+    if(!animate || !current || reduceMotion){
+      Object.values(screens).forEach(function(s){ s.classList.remove('active','fade-out','fade-in'); });
+      next.classList.add('active');
+      return;
+    }
+
+    // fade the current screen out, then swap and fade the next one in
+    current.classList.add('fade-out');
+    screenAnimTimer = setTimeout(function(){
+      Object.values(screens).forEach(function(s){ s.classList.remove('active','fade-out','fade-in'); });
+      next.classList.add('active','fade-in');
+      void next.offsetWidth;              // flush styles so the fade-in transitions
+      next.classList.remove('fade-in');
+    }, 280);
   }
 
   function rand(min,max){ return Math.round(min + Math.random()*(max-min)); }
@@ -684,18 +710,24 @@
     requestAnimationFrame(drawLoop);
   }
 
-  document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select'); });
-  document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select'); });
+  document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select', true); });
+  document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select', true); });
 
   document.getElementById('historyBtn').addEventListener('click', function(){
     renderHistory();
     showScreen('history');
   });
-  document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select'); });
+  document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select', true); });
   document.getElementById('clearHistoryBtn').addEventListener('click', function(){
     history = [];
     saveHistory();
     renderHistory();
+  });
+
+  // initial fade-in of the mood selector on first load
+  screens.select.classList.add('fade-in');
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ screens.select.classList.remove('fade-in'); });
   });
 })();
 </script>
