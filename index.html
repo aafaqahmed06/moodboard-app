@@ -333,6 +333,70 @@
     color:var(--ink-soft);
     text-align:center;
   }
+
+  /* ---- Screen 4: history ---- */
+  #screen-history .content{
+    padding:1rem 1.1rem calc(1.4rem + env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+    gap:0.7rem;
+  }
+  .history-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+  }
+  .history-head h2{ font-size:1.15rem; font-weight:700; }
+  .clear-btn{
+    background:none;
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--ink-soft);
+    font-size:0.74rem;
+    font-weight:600;
+    padding:0.3rem 0.6rem;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .clear-btn:active{ background:var(--cream); }
+  .history-item{
+    width:100%;
+    text-align:left;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:0.65rem 0.8rem;
+    display:flex;
+    align-items:center;
+    gap:0.7rem;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .history-item:active{ border-color:var(--gold); }
+  .history-item .h-emoji{ font-size:1.4rem; flex:0 0 auto; }
+  .history-item .h-main{ flex:1; min-width:0; }
+  .history-item .h-mood{ display:block; font-size:0.9rem; font-weight:600; }
+  .history-item .h-time{ display:block; font-size:0.72rem; color:var(--ink-soft); }
+  .history-item .h-stats{
+    flex:0 0 auto;
+    text-align:right;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .history-item .h-stats b{
+    display:block;
+    font-family:'Source Serif 4',serif;
+    font-size:1rem;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .history-empty{
+    text-align:center;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    margin-top:2.4rem;
+  }
 </style>
 </head>
 <body>
@@ -341,7 +405,7 @@
 
   <!-- SCREEN 1: mood selection -->
   <section id="screen-select" class="screen active">
-    <div class="topbar"><span class="brand">Mood Board · Heart&ndash;Brain Demo</span><span></span></div>
+    <div class="topbar"><span class="brand">Mood Board · Heart&ndash;Brain Demo</span><button class="back-btn" id="historyBtn">History</button></div>
     <div class="content">
       <h1>How are you feeling right now?</h1>
       <p class="sub">Tap a mood to log it.</p>
@@ -392,6 +456,22 @@
     </div>
   </section>
 
+  <!-- SCREEN 4: history -->
+  <section id="screen-history" class="screen">
+    <div class="topbar">
+      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <button class="back-btn" id="historyBackBtn">Done</button>
+    </div>
+    <div class="content">
+      <div class="history-head">
+        <h2>Mood history</h2>
+        <button class="clear-btn" id="clearHistoryBtn">Clear</button>
+      </div>
+      <div id="historyList"></div>
+      <p class="history-empty" id="historyEmpty">No moods logged yet. Log one from the home screen and it will appear here.</p>
+    </div>
+  </section>
+
 </div>
 
 <script>
@@ -418,7 +498,8 @@
   const screens = {
     select: document.getElementById('screen-select'),
     loading: document.getElementById('screen-loading'),
-    dashboard: document.getElementById('screen-dashboard')
+    dashboard: document.getElementById('screen-dashboard'),
+    history: document.getElementById('screen-history')
   };
   function showScreen(name){
     Object.values(screens).forEach(s=>s.classList.remove('active'));
@@ -440,6 +521,64 @@
     const g=Math.round(from[1]+(to[1]-from[1])*t);
     const b=Math.round(from[2]+(to[2]-from[2])*t);
     return 'rgb('+r+','+g+','+b+')';
+  }
+
+  // ---- history (persisted to localStorage) ----
+  const HISTORY_KEY = 'moodboard-history-v1';
+  const HISTORY_MAX = 50;
+  let history = loadHistory();
+
+  function loadHistory(){
+    try{
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){ return []; }
+  }
+  function saveHistory(){
+    try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_MAX))); }catch(e){}
+  }
+  function addHistoryEntry(r){
+    history.unshift({
+      key:r.key, label:r.label, emoji:r.emoji, group:r.group,
+      coherence:r.coherence, hr:r.hr, primary:r.primary,
+      hormones:r.hormones, note:r.note, ts:Date.now()
+    });
+    history = history.slice(0, HISTORY_MAX);
+    saveHistory();
+  }
+  function formatTime(ts){
+    const d = new Date(ts), now = new Date();
+    const time = d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+    if(d.toDateString() === now.toDateString()) return 'Today ' + time;
+    const yst = new Date(now); yst.setDate(now.getDate() - 1);
+    if(d.toDateString() === yst.toDateString()) return 'Yesterday ' + time;
+    return d.toLocaleDateString([], {month:'short', day:'numeric'}) + ' ' + time;
+  }
+
+  const historyList = document.getElementById('historyList');
+  const historyEmpty = document.getElementById('historyEmpty');
+  function renderHistory(){
+    historyList.innerHTML = '';
+    historyEmpty.style.display = history.length ? 'none' : 'block';
+    history.forEach(function(h){
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'history-item';
+      item.innerHTML =
+        '<span class="h-emoji">'+h.emoji+'</span>'+
+        '<span class="h-main">'+
+          '<span class="h-mood">'+h.label+'</span>'+
+          '<span class="h-time">'+formatTime(h.ts)+'</span>'+
+        '</span>'+
+        '<span class="h-stats"><b>'+h.coherence+'</b>coherence · '+h.hr+' bpm</span>';
+      item.addEventListener('click', function(){
+        currentReading = h;
+        renderDashboard(h);
+        showScreen('dashboard');
+      });
+      historyList.appendChild(item);
+    });
   }
 
   // ---- build mood grid ----
@@ -478,6 +617,7 @@
 
     setTimeout(function(){
       clearInterval(statusTimer);
+      addHistoryEntry(currentReading);
       renderDashboard(currentReading);
       showScreen('dashboard');
     }, 3000);
@@ -546,6 +686,17 @@
 
   document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select'); });
   document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select'); });
+
+  document.getElementById('historyBtn').addEventListener('click', function(){
+    renderHistory();
+    showScreen('history');
+  });
+  document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select'); });
+  document.getElementById('clearHistoryBtn').addEventListener('click', function(){
+    history = [];
+    saveHistory();
+    renderHistory();
+  });
 })();
 </script>
 </body>
