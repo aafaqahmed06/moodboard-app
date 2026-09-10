@@ -351,6 +351,12 @@
     color:var(--ink-soft);
     margin-top:0.15rem;
   }
+  .stat-label .src-tag{
+    font-weight:700;
+    margin-left:0.3rem;
+  }
+  .stat-label .src-tag.is-live{ color:var(--coherent); }
+  .stat-label .src-tag.is-sim{ color:var(--ink-soft); }
 
   .modulator-panel{
     background:var(--paper);
@@ -629,11 +635,11 @@
       <div class="stat-pair">
         <div class="stat-card">
           <span class="stat-value" id="coherenceValue">&mdash;</span>
-          <span class="stat-label">Coherence index</span>
+          <span class="stat-label">Coherence index<span class="src-tag" id="coherenceSource"></span></span>
         </div>
         <div class="stat-card">
           <span class="stat-value" id="hrValue">&mdash;</span>
-          <span class="stat-label">Residual HR (sim.)</span>
+          <span class="stat-label">Residual HR</span>
         </div>
       </div>
       <div class="modulator-panel">
@@ -754,7 +760,7 @@
     history.unshift({
       key:r.key, label:r.label, emoji:r.emoji, group:r.group,
       coherence:r.coherence, hr:r.hr, primary:r.primary,
-      hormones:r.hormones, note:r.note, ts:Date.now()
+      hormones:r.hormones, note:r.note, source:r.source || 'simulated', ts:Date.now()
     });
     history = history.slice(0, HISTORY_MAX);
     saveHistory();
@@ -814,9 +820,21 @@
   let coherenceAnim = 50, targetCoherence = 50, phase = 0;
 
   function selectMood(m){
-    const coherence = rand(m.coherenceRange[0], m.coherenceRange[1]);
-    const hr = rand(m.hrRange[0], m.hrRange[1]);
-    currentReading = Object.assign({}, m, {coherence:coherence, hr:hr});
+    // Use the paired watch's live reading only when it's actually live and
+    // has buffered enough beats; otherwise fall back to the mock per-mood
+    // ranges exactly as before.
+    const live = (btState === 'live' && hasLiveData()) ? getLiveReading() : null;
+    let coherence, hr, source;
+    if(live){
+      coherence = live.coherence;
+      hr = live.hr;
+      source = 'live';
+    }else{
+      coherence = rand(m.coherenceRange[0], m.coherenceRange[1]);
+      hr = rand(m.hrRange[0], m.hrRange[1]);
+      source = 'simulated';
+    }
+    currentReading = Object.assign({}, m, {coherence:coherence, hr:hr, source:source});
 
     showScreen('loading');
     let i = 0;
@@ -840,6 +858,10 @@
     document.getElementById('coherenceValue').textContent = r.coherence;
     document.getElementById('coherenceValue').style.color = coherenceColor(r.coherence);
     document.getElementById('hrValue').textContent = r.hr+' bpm';
+    const isLive = r.source === 'live';
+    const srcEl = document.getElementById('coherenceSource');
+    srcEl.textContent = isLive ? '(live)' : '(simulated)';
+    srcEl.className = 'src-tag ' + (isLive ? 'is-live' : 'is-sim');
     renderHormones(r);
     document.getElementById('noteCard').textContent = r.note;
     targetCoherence = r.coherence;
