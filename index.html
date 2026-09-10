@@ -503,6 +503,76 @@
     color:var(--ink-soft);
     margin-top:2.4rem;
   }
+
+  /* ---- hidden dev tool: synthetic RR feed (not shown unless triggered) ---- */
+  #devPanel{
+    position:fixed;
+    left:50%;
+    bottom:0;
+    transform:translateX(-50%);
+    width:100%;
+    max-width:520px;
+    z-index:50;
+    background:var(--maroon-dark);
+    color:var(--paper);
+    border-top:3px solid var(--gold);
+    padding:0.6rem 0.8rem calc(0.7rem + env(safe-area-inset-bottom));
+    font-size:0.8rem;
+  }
+  #devPanel .dev-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:0.66rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--gold-soft);
+    margin-bottom:0.5rem;
+  }
+  #devPanel .dev-close{
+    background:none;
+    border:none;
+    color:var(--gold-soft);
+    font-size:1rem;
+    line-height:1;
+    padding:0 0.2rem;
+    cursor:pointer;
+  }
+  #devPanel .dev-moods{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.4rem;
+  }
+  #devPanel .dev-mood{
+    flex:1 1 auto;
+    min-width:4.6rem;
+    padding:0.45rem 0.5rem;
+    background:rgba(246,241,231,0.08);
+    border:1px solid rgba(228,201,137,0.4);
+    border-radius:6px;
+    color:var(--paper);
+    font-size:0.78rem;
+    font-weight:600;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  #devPanel .dev-mood:active{ background:rgba(246,241,231,0.18); }
+  #devPanel .dev-mood.is-active{
+    border-color:var(--gold);
+    background:rgba(228,201,137,0.22);
+  }
+  #devPanel .dev-stop{
+    margin-top:0.5rem;
+    width:100%;
+    padding:0.4rem;
+    background:none;
+    border:1px solid rgba(246,241,231,0.3);
+    border-radius:6px;
+    color:var(--paper);
+    font-size:0.74rem;
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -955,8 +1025,10 @@
     return liveData.rr.length >= 5;
   }
 
-  function onHrValueChanged(e){
-    const dv = e.target.value; // DataView
+  // Single ingestion path for HR Measurement frames — used by both the real
+  // BLE notification handler and the hidden dev feed, so the parser/buffer
+  // logic is never duplicated. `dv` is a DataView over one raw frame.
+  function ingestHrFrame(dv, source){
     let parsed;
     try{
       parsed = parseHeartRateMeasurement(dv);
@@ -966,11 +1038,15 @@
     }
     pushLiveData(parsed);
     console.log(
-      '[bt] HR ' + parsed.heartRate + ' bpm · RR(ms) ' +
+      '[' + (source || 'bt') + '] HR ' + parsed.heartRate + ' bpm · RR(ms) ' +
       JSON.stringify(parsed.rrIntervalsMs.map(function(v){ return Math.round(v); })) +
       ' · buffer ' + liveData.rr.length + '/' + RR_BUFFER_MAX +
       ' · hasLiveData ' + hasLiveData()
     );
+  }
+
+  function onHrValueChanged(e){
+    ingestHrFrame(e.target.value, 'bt');
   }
 
   // Expose for manual verification in DevTools during bring-up.
@@ -1003,6 +1079,7 @@
       return;
     }
 
+    devStop(); // a real watch takes over from any synthetic dev feed
     setPairMsg('');
     setBtState('connecting');
     resetLiveData();
@@ -1035,6 +1112,147 @@
 
   pairBtn.addEventListener('click', pairWatch);
   setBtState('unpaired');
+
+  // ---- Hidden dev tool: synthetic RR feed (no physical watch needed) ----
+  // Reuses ingestHrFrame() — the exact same parser/buffer path a real
+  // notification goes through — so the rest of the app can't tell the
+  // difference. Not linked from any visible UI; see triggers below.
+  let devTimer = null;
+  let devGen = null;
+  let devPanel = null;
+
+  // Builds an RR-interval generator whose statistics (mean, oscillation,
+  // noise) are derived from the mood's own hrRange/coherenceRange, so a
+  // coherent mood streams a smooth ~0.1Hz rhythm and an incoherent one
+  // streams erratic, noisy intervals.
+  function makeRrGenerator(mood){
+    const hr = rand(mood.hrRange[0], mood.hrRange[1]);
+    const meanRR = 60000 / hr;
+    const c = rand(mood.coherenceRange[0], mood.coherenceRange[1]) / 100;
+    const oscAmp = meanRR * (0.02 + 0.10 * c);      // coherent -> bigger, cleaner RSA wave
+    const noiseAmp = meanRR * (0.006 + 0.07 * (1 - c)); // incoherent -> more random jitter
+    let phase = Math.random() * Math.PI * 2;
+    let lastRR = meanRR;
+    return {
+      next: function(){
+        phase += 2 * Math.PI * 0.1 * (lastRR / 1000); // ~0.1Hz respiratory rhythm
+        const osc = Math.sin(phase) * oscAmp;
+        const chaos = (1 - c) * Math.sin(phase * 2.7 + Math.random() * 0.8) * oscAmp * 0.7;
+        const noise = (Math.random() * 2 - 1) * noiseAmp;
+        lastRR = Math.max(350, Math.min(1800, meanRR + osc + chaos + noise));
+        return lastRR;
+      }
+    };
+  }
+
+  // Encodes a standard heart_rate_measurement frame (flags + uint8 HR +
+  // uint16-LE RR-intervals in 1/1024s) — the inverse of
+  // parseHeartRateMeasurement(), so ingestHrFrame() can't tell this apart
+  // from a real BLE notification.
+  function encodeHrmFrame(rrMsList){
+    const avgRR = rrMsList.reduce(function(a, b){ return a + b; }, 0) / rrMsList.length;
+    const hr = Math.max(0, Math.min(255, Math.round(60000 / avgRR)));
+    const buf = new ArrayBuffer(2 + rrMsList.length * 2);
+    const dv = new DataView(buf);
+    dv.setUint8(0, 0x10); // flags: RR-interval present, HR value format = uint8
+    dv.setUint8(1, hr);
+    let off = 2;
+    rrMsList.forEach(function(rrMs){
+      dv.setUint16(off, Math.max(0, Math.min(65535, Math.round(rrMs * 1024 / 1000))), true);
+      off += 2;
+    });
+    return dv;
+  }
+
+  function devStop(){
+    if(devTimer){ clearInterval(devTimer); devTimer = null; }
+    devGen = null;
+    if(devPanel){
+      devPanel.querySelectorAll('.dev-mood').forEach(function(b){ b.classList.remove('is-active'); });
+    }
+  }
+
+  function devFeedMood(mood, btnEl){
+    devStop();
+    resetLiveData();
+    setBtState('live');
+    setPairMsg('Dev feed active: ' + mood.label + ' (synthetic RR stream)');
+    if(btnEl) btnEl.classList.add('is-active');
+
+    devGen = makeRrGenerator(mood);
+    // Initial burst so hasLiveData() flips true immediately, same as it
+    // would once a real strap has sent its first handful of beats.
+    const burst = [];
+    for(let i = 0; i < 8; i++) burst.push(devGen.next());
+    ingestHrFrame(encodeHrmFrame(burst), 'dev');
+
+    // Then keep streaming ~1 beat per tick at a plausible cadence.
+    devTimer = setInterval(function(){
+      ingestHrFrame(encodeHrmFrame([devGen.next()]), 'dev');
+    }, 900);
+  }
+
+  function buildDevPanel(){
+    if(devPanel) return devPanel;
+    devPanel = document.createElement('div');
+    devPanel.id = 'devPanel';
+    devPanel.innerHTML =
+      '<div class="dev-title"><span>Dev &middot; synthetic RR feed</span>' +
+      '<button type="button" class="dev-close" aria-label="Close dev panel">&times;</button></div>' +
+      '<div class="dev-moods"></div>' +
+      '<button type="button" class="dev-stop">Stop feed</button>';
+    const moodsEl = devPanel.querySelector('.dev-moods');
+    MOODS.forEach(function(m){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dev-mood';
+      btn.textContent = m.emoji + ' ' + m.label;
+      btn.addEventListener('click', function(){ devFeedMood(m, btn); });
+      moodsEl.appendChild(btn);
+    });
+    devPanel.querySelector('.dev-close').addEventListener('click', function(){
+      devStop();
+      devPanel.hidden = true;
+    });
+    devPanel.querySelector('.dev-stop').addEventListener('click', function(){
+      devStop();
+      resetLiveData();
+      setBtState('unpaired');
+      setPairMsg('');
+    });
+    document.body.appendChild(devPanel);
+    return devPanel;
+  }
+
+  function activateDevMode(){
+    buildDevPanel().hidden = false;
+    console.log('[dev] synthetic RR feed panel enabled');
+  }
+
+  // Trigger 1: ?devmode=1 in the URL.
+  try{
+    if(new URLSearchParams(window.location.search).get('devmode') === '1'){
+      activateDevMode();
+    }
+  }catch(_){}
+
+  // Trigger 2: tap any connection-status dot 5 times within ~1.5s. Nothing
+  // hints at this in the UI, so it stays invisible to anyone who doesn't
+  // already know it's there.
+  (function(){
+    let taps = 0, resetTimer = null;
+    btDots.forEach(function(d){
+      d.addEventListener('click', function(){
+        taps++;
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(function(){ taps = 0; }, 1500);
+        if(taps >= 5){
+          taps = 0;
+          activateDevMode();
+        }
+      });
+    });
+  })();
 
   // initial fade-in of the mood selector on first load
   screens.select.classList.add('fade-in');
