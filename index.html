@@ -228,6 +228,16 @@
   .pair-btn.is-live .pair-dot::after{
     animation:btPulse 1.5s ease-out infinite;
   }
+  .pair-btn:disabled{ cursor:default; opacity:0.85; }
+  .pair-msg{
+    align-self:center;
+    max-width:17rem;
+    margin-top:0.5rem;
+    text-align:center;
+    font-size:0.76rem;
+    line-height:1.4;
+    color:var(--ink-soft);
+  }
 
   /* ---- Screen 2: loading ---- */
   #screen-loading{
@@ -516,6 +526,7 @@
         <span class="pair-dot"></span>
         <span id="pairBtnLabel">Pair my watch</span>
       </button>
+      <p class="pair-msg" id="pairMsg" role="status" aria-live="polite" hidden></p>
       <p class="select-footnote">Demo — physiological readout is simulated, not measured</p>
     </div>
   </section>
@@ -829,36 +840,110 @@
     renderHistory();
   });
 
-  // ---- Bluetooth watch status (visual scaffold only — no real BLE yet) ----
-  // "Pair my watch" just cycles through the four visual states so the design
-  // can be reviewed before real hardware is wired in.
-  const BT_STATES = ['unpaired', 'connecting', 'live', 'disconnected'];
+  // ---- Bluetooth watch pairing (Web Bluetooth — Heart Rate service) ----
+  // Connects to a standard BLE heart-rate monitor and subscribes to
+  // heart_rate_measurement notifications. Raw values are only logged to the
+  // console for now — parsing comes in a later step.
+  const HEART_RATE_SERVICE = 'heart_rate';                 // 0x180D
+  const HEART_RATE_MEASUREMENT = 'heart_rate_measurement'; // 0x2A37
+
   const BT_META = {
-    unpaired:     {cls:'',               label:'Pair my watch',    hint:'Not paired'},
-    connecting:   {cls:'is-connecting',  label:'Connecting…', hint:'Connecting to watch'},
-    live:         {cls:'is-live',        label:'Watch connected',  hint:'Live — receiving data'},
-    disconnected: {cls:'is-disconnected',label:'Reconnect watch',  hint:'Disconnected'}
+    unpaired:     {cls:'',                label:'Pair my watch',   hint:'Not paired'},
+    connecting:   {cls:'is-connecting',   label:'Connecting…',     hint:'Connecting to watch'},
+    live:         {cls:'is-live',         label:'Watch connected', hint:'Live — receiving data'},
+    disconnected: {cls:'is-disconnected', label:'Reconnect watch', hint:'Watch disconnected'}
   };
-  let btStateIndex = 0;
+
   const btDots = document.querySelectorAll('.bt-dot');
   const pairBtn = document.getElementById('pairBtn');
   const pairBtnLabel = document.getElementById('pairBtnLabel');
+  const pairMsg = document.getElementById('pairMsg');
 
-  function renderBtStatus(){
-    const meta = BT_META[BT_STATES[btStateIndex]];
+  let btState = 'unpaired';
+  let btDevice = null;
+  let hrChar = null;
+
+  function setBtState(state){
+    btState = state;
+    const meta = BT_META[state] || BT_META.unpaired;
     btDots.forEach(function(d){
       d.className = 'bt-dot ' + meta.cls;
       d.setAttribute('title', 'Watch: ' + meta.hint);
       d.setAttribute('aria-label', 'Watch status: ' + meta.hint);
     });
     pairBtn.className = 'pair-btn ' + meta.cls;
+    pairBtn.disabled = (state === 'connecting');
     pairBtnLabel.textContent = meta.label;
   }
-  pairBtn.addEventListener('click', function(){
-    btStateIndex = (btStateIndex + 1) % BT_STATES.length;
-    renderBtStatus();
-  });
-  renderBtStatus();
+
+  function setPairMsg(text){
+    if(!text){ pairMsg.hidden = true; pairMsg.textContent = ''; return; }
+    pairMsg.textContent = text;
+    pairMsg.hidden = false;
+  }
+
+  function onHrValueChanged(e){
+    // Parser comes later — for now just confirm data is flowing.
+    console.log('[bt] characteristicvaluechanged', e.target.value, e);
+  }
+
+  function onGattDisconnected(){
+    console.log('[bt] gattserverdisconnected');
+    if(hrChar){
+      try{ hrChar.removeEventListener('characteristicvaluechanged', onHrValueChanged); }catch(_){}
+    }
+    hrChar = null;
+    setBtState('disconnected');
+    setPairMsg('Watch disconnected.');
+  }
+
+  function teardownBtDevice(){
+    if(btDevice){
+      try{ btDevice.removeEventListener('gattserverdisconnected', onGattDisconnected); }catch(_){}
+      try{ if(btDevice.gatt && btDevice.gatt.connected) btDevice.gatt.disconnect(); }catch(_){}
+    }
+    btDevice = null;
+    hrChar = null;
+  }
+
+  async function pairWatch(){
+    if(!(navigator.bluetooth && navigator.bluetooth.requestDevice)){
+      setBtState('unpaired');
+      setPairMsg('Live pairing needs Chrome on Android or desktop — the mood buttons still run in demo mode.');
+      return;
+    }
+
+    setPairMsg('');
+    setBtState('connecting');
+
+    try{
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [{ services: [HEART_RATE_SERVICE] }]
+      });
+      btDevice = device;
+      device.addEventListener('gattserverdisconnected', onGattDisconnected);
+
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService(HEART_RATE_SERVICE);
+      hrChar = await service.getCharacteristic(HEART_RATE_MEASUREMENT);
+      hrChar.addEventListener('characteristicvaluechanged', onHrValueChanged);
+      await hrChar.startNotifications();
+
+      console.log('[bt] connected to', device.name || '(unnamed device)', '— heart_rate_measurement notifications started');
+      setBtState('live');
+      setPairMsg('');
+    }catch(err){
+      console.warn('[bt] pairing failed:', err);
+      teardownBtDevice();
+      setBtState('unpaired');
+      setPairMsg(err && err.name === 'NotFoundError'
+        ? 'Pairing cancelled — no watch selected.'
+        : 'Couldn’t connect to the watch. Please try again.');
+    }
+  }
+
+  pairBtn.addEventListener('click', pairWatch);
+  setBtState('unpaired');
 
   // initial fade-in of the mood selector on first load
   screens.select.classList.add('fade-in');
