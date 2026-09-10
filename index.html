@@ -61,6 +61,48 @@
     padding:0.3rem 0.2rem;
     cursor:pointer;
   }
+  .topbar-right{
+    display:flex;
+    align-items:center;
+    gap:0.55rem;
+  }
+
+  /* ---- Bluetooth watch status dot (topbar) ---- */
+  .bt-dot{
+    position:relative;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    flex:0 0 auto;
+    color:rgba(246,241,231,0.45);      /* unpaired: muted on the maroon bar */
+    background:currentColor;
+    transition:color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .bt-dot::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:currentColor;
+    opacity:0;
+  }
+  .bt-dot.is-connecting{ color:var(--gold); }
+  .bt-dot.is-live{ color:var(--coherent); }
+  .bt-dot.is-disconnected{
+    color:rgba(246,241,231,0.45);
+    box-shadow:0 0 0 2px var(--incoherent);
+  }
+  .bt-dot.is-connecting::after,
+  .bt-dot.is-live::after{
+    animation:btPulse 1.5s ease-out infinite;
+  }
+  @keyframes btPulse{
+    0%{ transform:scale(1); opacity:0.55; }
+    100%{ transform:scale(2.6); opacity:0; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    .bt-dot::after,.pair-dot::after{ animation:none !important; }
+  }
 
   #app{
     height:100dvh;
@@ -138,6 +180,53 @@
     font-size:0.72rem;
     color:var(--ink-soft);
     margin-top:1rem;
+  }
+  /* ---- "Pair my watch" — lower-emphasis outline button ---- */
+  .pair-btn{
+    align-self:center;
+    margin-top:0.9rem;
+    display:inline-flex;
+    align-items:center;
+    gap:0.5rem;
+    padding:0.5rem 0.95rem;
+    background:transparent;
+    border:1px solid var(--line);
+    border-radius:8px;
+    color:var(--ink-soft);
+    font-size:0.82rem;
+    font-weight:600;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .pair-btn:active{ background:var(--cream); }
+  .pair-dot{
+    position:relative;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    flex:0 0 auto;
+    color:#B9AC9A;                      /* unpaired */
+    background:currentColor;
+    transition:color 0.2s ease;
+  }
+  .pair-dot::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:currentColor;
+    opacity:0;
+  }
+  .pair-btn.is-connecting{ border-color:var(--gold); color:var(--maroon); }
+  .pair-btn.is-connecting .pair-dot{ color:var(--gold); }
+  .pair-btn.is-live{ border-color:var(--coherent); color:var(--coherent); }
+  .pair-btn.is-live .pair-dot{ color:var(--coherent); }
+  .pair-btn.is-disconnected{ border-color:var(--incoherent); color:var(--incoherent); }
+  .pair-btn.is-disconnected .pair-dot{ color:var(--incoherent); }
+  .pair-btn.is-connecting .pair-dot::after,
+  .pair-btn.is-live .pair-dot::after{
+    animation:btPulse 1.5s ease-out infinite;
   }
 
   /* ---- Screen 2: loading ---- */
@@ -412,11 +501,21 @@
 
   <!-- SCREEN 1: mood selection -->
   <section id="screen-select" class="screen active">
-    <div class="topbar"><span class="brand">Mood Board · Heart&ndash;Brain Demo</span><button class="back-btn" id="historyBtn">History</button></div>
+    <div class="topbar">
+      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <div class="topbar-right">
+        <span class="bt-dot" id="btDot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
+        <button class="back-btn" id="historyBtn">History</button>
+      </div>
+    </div>
     <div class="content">
       <h1>How are you feeling right now?</h1>
       <p class="sub">Tap a mood to log it.</p>
       <div class="mood-grid" id="moodGrid"></div>
+      <button class="pair-btn" id="pairBtn" type="button">
+        <span class="pair-dot"></span>
+        <span id="pairBtnLabel">Pair my watch</span>
+      </button>
       <p class="select-footnote">Demo — physiological readout is simulated, not measured</p>
     </div>
   </section>
@@ -438,7 +537,10 @@
   <section id="screen-dashboard" class="screen">
     <div class="topbar">
       <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
-      <button class="back-btn" id="backBtn">New reading</button>
+      <div class="topbar-right">
+        <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
+        <button class="back-btn" id="backBtn">New reading</button>
+      </div>
     </div>
     <div class="content">
       <div class="mood-chip" id="dashMoodChip"></div>
@@ -467,7 +569,10 @@
   <section id="screen-history" class="screen">
     <div class="topbar">
       <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
-      <button class="back-btn" id="historyBackBtn">Done</button>
+      <div class="topbar-right">
+        <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
+        <button class="back-btn" id="historyBackBtn">Done</button>
+      </div>
     </div>
     <div class="content">
       <div class="history-head">
@@ -723,6 +828,37 @@
     saveHistory();
     renderHistory();
   });
+
+  // ---- Bluetooth watch status (visual scaffold only — no real BLE yet) ----
+  // "Pair my watch" just cycles through the four visual states so the design
+  // can be reviewed before real hardware is wired in.
+  const BT_STATES = ['unpaired', 'connecting', 'live', 'disconnected'];
+  const BT_META = {
+    unpaired:     {cls:'',               label:'Pair my watch',    hint:'Not paired'},
+    connecting:   {cls:'is-connecting',  label:'Connecting…', hint:'Connecting to watch'},
+    live:         {cls:'is-live',        label:'Watch connected',  hint:'Live — receiving data'},
+    disconnected: {cls:'is-disconnected',label:'Reconnect watch',  hint:'Disconnected'}
+  };
+  let btStateIndex = 0;
+  const btDots = document.querySelectorAll('.bt-dot');
+  const pairBtn = document.getElementById('pairBtn');
+  const pairBtnLabel = document.getElementById('pairBtnLabel');
+
+  function renderBtStatus(){
+    const meta = BT_META[BT_STATES[btStateIndex]];
+    btDots.forEach(function(d){
+      d.className = 'bt-dot ' + meta.cls;
+      d.setAttribute('title', 'Watch: ' + meta.hint);
+      d.setAttribute('aria-label', 'Watch status: ' + meta.hint);
+    });
+    pairBtn.className = 'pair-btn ' + meta.cls;
+    pairBtnLabel.textContent = meta.label;
+  }
+  pairBtn.addEventListener('click', function(){
+    btStateIndex = (btStateIndex + 1) % BT_STATES.length;
+    renderBtStatus();
+  });
+  renderBtStatus();
 
   // initial fade-in of the mood selector on first load
   screens.select.classList.add('fade-in');
