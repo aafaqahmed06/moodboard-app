@@ -1025,6 +1025,44 @@
     return liveData.rr.length >= 5;
   }
 
+  // ---- Live coherence + HR derived from the RR-interval buffer ----
+  // RMSSD = root mean square of successive differences between adjacent
+  // RR-intervals. For resting adults it roughly spans ~10 ms (tense, low
+  // vagal tone) to ~110 ms (relaxed, high vagal tone); we map that onto
+  // ~12-95 so a live coherence reading sits in the same visual band as the
+  // mock per-mood values (which run ~12-92). Higher RMSSD -> higher
+  // coherence, clamped at both ends.
+  const RMSSD_MIN = 10, RMSSD_MAX = 110;   // ms
+  const LIVE_COH_MIN = 12, LIVE_COH_MAX = 95;
+
+  function rmssd(rr){
+    if(rr.length < 2) return 0;
+    let sumSq = 0;
+    for(let i = 1; i < rr.length; i++){
+      const d = rr[i] - rr[i - 1];
+      sumSq += d * d;
+    }
+    return Math.sqrt(sumSq / (rr.length - 1));
+  }
+
+  function rmssdToCoherence(ms){
+    const t = (ms - RMSSD_MIN) / (RMSSD_MAX - RMSSD_MIN);
+    const scaled = LIVE_COH_MIN + t * (LIVE_COH_MAX - LIVE_COH_MIN);
+    return Math.round(Math.max(LIVE_COH_MIN, Math.min(LIVE_COH_MAX, scaled)));
+  }
+
+  // Returns { coherence, hr } from the current buffer, or null when
+  // hasLiveData() is false (not enough real data yet to trust).
+  function getLiveReading(){
+    if(!hasLiveData()) return null;
+    const rr = liveData.rr;
+    const meanRR = rr.reduce(function(a, b){ return a + b; }, 0) / rr.length;
+    return {
+      coherence: rmssdToCoherence(rmssd(rr)),
+      hr: Math.round(60000 / meanRR)   // rolling-average HR over the window
+    };
+  }
+
   // Single ingestion path for HR Measurement frames — used by both the real
   // BLE notification handler and the hidden dev feed, so the parser/buffer
   // logic is never duplicated. `dv` is a DataView over one raw frame.
@@ -1037,11 +1075,13 @@
       return;
     }
     pushLiveData(parsed);
+    const reading = getLiveReading();
     console.log(
       '[' + (source || 'bt') + '] HR ' + parsed.heartRate + ' bpm · RR(ms) ' +
       JSON.stringify(parsed.rrIntervalsMs.map(function(v){ return Math.round(v); })) +
       ' · buffer ' + liveData.rr.length + '/' + RR_BUFFER_MAX +
-      ' · hasLiveData ' + hasLiveData()
+      ' · hasLiveData ' + hasLiveData() +
+      (reading ? ' · live {coherence:' + reading.coherence + ', hr:' + reading.hr + '}' : '')
     );
   }
 
@@ -1050,7 +1090,13 @@
   }
 
   // Expose for manual verification in DevTools during bring-up.
-  window.__moodboardLive = {liveData: liveData, hasLiveData: hasLiveData, parseHeartRateMeasurement: parseHeartRateMeasurement};
+  window.__moodboardLive = {
+    liveData: liveData,
+    hasLiveData: hasLiveData,
+    getLiveReading: getLiveReading,
+    rmssd: rmssd,
+    parseHeartRateMeasurement: parseHeartRateMeasurement
+  };
 
   function onGattDisconnected(){
     console.log('[bt] gattserverdisconnected');
