@@ -841,9 +841,9 @@
   });
 
   // ---- Bluetooth watch pairing (Web Bluetooth — Heart Rate service) ----
-  // Connects to a standard BLE heart-rate monitor and subscribes to
-  // heart_rate_measurement notifications. Raw values are only logged to the
-  // console for now — parsing comes in a later step.
+  // Connects to a standard BLE heart-rate monitor, subscribes to
+  // heart_rate_measurement notifications, and parses each frame per the
+  // Bluetooth SIG spec into an in-memory buffer of recent RR-intervals + HR.
   const HEART_RATE_SERVICE = 'heart_rate';                 // 0x180D
   const HEART_RATE_MEASUREMENT = 'heart_rate_measurement'; // 0x2A37
 
@@ -882,10 +882,99 @@
     pairMsg.hidden = false;
   }
 
-  function onHrValueChanged(e){
-    // Parser comes later — for now just confirm data is flowing.
-    console.log('[bt] characteristicvaluechanged', e.target.value, e);
+  // ---- Heart Rate Measurement parser (Bluetooth SIG 0x2A37) ----
+  // Frame layout:
+  //   byte 0        : flags
+  //     bit 0       : HR value format — 0 = uint8, 1 = uint16
+  //     bit 3       : Energy Expended present (uint16, kJ)
+  //     bit 4       : one or more RR-interval values present
+  //   HR value      : 1 or 2 bytes (little-endian) per bit 0
+  //   [energy]      : 2 bytes little-endian, if bit 3
+  //   [RR-intervals]: remaining bytes as uint16 little-endian, units of
+  //                   1/1024 s each
+  function parseHeartRateMeasurement(dv){
+    const flags = dv.getUint8(0);
+    const hr16bit       = (flags & 0x01) !== 0;
+    const energyPresent = (flags & 0x08) !== 0;
+    const rrPresent     = (flags & 0x10) !== 0;
+
+    let offset = 1;
+    let heartRate;
+    if(hr16bit){
+      heartRate = dv.getUint16(offset, true);
+      offset += 2;
+    }else{
+      heartRate = dv.getUint8(offset);
+      offset += 1;
+    }
+
+    if(energyPresent){
+      offset += 2; // Energy Expended — skipped, unused for now
+    }
+
+    const rrIntervalsMs = [];
+    if(rrPresent){
+      for(; offset + 2 <= dv.byteLength; offset += 2){
+        const rr1024 = dv.getUint16(offset, true);
+        rrIntervalsMs.push(rr1024 * 1000 / 1024); // 1/1024 s -> ms
+      }
+    }
+
+    return {flags: flags, heartRate: heartRate, rrIntervalsMs: rrIntervalsMs};
   }
+
+  // ---- Rolling in-memory buffer of recent live data ----
+  const RR_BUFFER_MAX = 60;   // keep roughly the last 60 beats of RR-intervals
+  const liveData = {
+    hr: null,                 // latest instantaneous HR (bpm)
+    hrAt: 0,                  // Date.now() of that sample
+    rr: []                    // recent RR-intervals in ms, oldest first
+  };
+
+  function resetLiveData(){
+    liveData.hr = null;
+    liveData.hrAt = 0;
+    liveData.rr.length = 0;
+  }
+
+  function pushLiveData(parsed){
+    if(typeof parsed.heartRate === 'number'){
+      liveData.hr = parsed.heartRate;
+      liveData.hrAt = Date.now();
+    }
+    for(let i = 0; i < parsed.rrIntervalsMs.length; i++){
+      liveData.rr.push(parsed.rrIntervalsMs[i]);
+    }
+    if(liveData.rr.length > RR_BUFFER_MAX){
+      liveData.rr.splice(0, liveData.rr.length - RR_BUFFER_MAX);
+    }
+  }
+
+  // True only once we have enough buffered RR-intervals to trust the signal.
+  function hasLiveData(){
+    return liveData.rr.length >= 5;
+  }
+
+  function onHrValueChanged(e){
+    const dv = e.target.value; // DataView
+    let parsed;
+    try{
+      parsed = parseHeartRateMeasurement(dv);
+    }catch(err){
+      console.warn('[bt] failed to parse heart_rate_measurement frame', err, dv);
+      return;
+    }
+    pushLiveData(parsed);
+    console.log(
+      '[bt] HR ' + parsed.heartRate + ' bpm · RR(ms) ' +
+      JSON.stringify(parsed.rrIntervalsMs.map(function(v){ return Math.round(v); })) +
+      ' · buffer ' + liveData.rr.length + '/' + RR_BUFFER_MAX +
+      ' · hasLiveData ' + hasLiveData()
+    );
+  }
+
+  // Expose for manual verification in DevTools during bring-up.
+  window.__moodboardLive = {liveData: liveData, hasLiveData: hasLiveData, parseHeartRateMeasurement: parseHeartRateMeasurement};
 
   function onGattDisconnected(){
     console.log('[bt] gattserverdisconnected');
@@ -893,6 +982,7 @@
       try{ hrChar.removeEventListener('characteristicvaluechanged', onHrValueChanged); }catch(_){}
     }
     hrChar = null;
+    resetLiveData();
     setBtState('disconnected');
     setPairMsg('Watch disconnected.');
   }
@@ -915,6 +1005,7 @@
 
     setPairMsg('');
     setBtState('connecting');
+    resetLiveData();
 
     try{
       const device = await navigator.bluetooth.requestDevice({
