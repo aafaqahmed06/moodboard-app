@@ -1012,6 +1012,7 @@
   // Bluetooth SIG spec into an in-memory buffer of recent RR-intervals + HR.
   const HEART_RATE_SERVICE = 'heart_rate';                 // 0x180D
   const HEART_RATE_MEASUREMENT = 'heart_rate_measurement'; // 0x2A37
+  const BT_DEVICE_ID_KEY = 'moodboard-bt-device-id-v1'; // last-paired device, for silent reconnect
 
   const BT_META = {
     unpaired:     {cls:'',                label:'Pair my watch',   hint:'Not paired'},
@@ -1236,6 +1237,26 @@
     hrChar = null;
   }
 
+  // Shared by pairWatch() (after requestDevice()) and tryAutoReconnect()
+  // (after getDevices()) so the actual GATT-connect sequence is never
+  // duplicated. Remembers the device id so a later visit can reconnect
+  // without showing the chooser again.
+  async function connectToDevice(device){
+    btDevice = device;
+    device.addEventListener('gattserverdisconnected', onGattDisconnected);
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(HEART_RATE_SERVICE);
+    hrChar = await service.getCharacteristic(HEART_RATE_MEASUREMENT);
+    hrChar.addEventListener('characteristicvaluechanged', onHrValueChanged);
+    await hrChar.startNotifications();
+
+    try{ localStorage.setItem(BT_DEVICE_ID_KEY, device.id); }catch(_){}
+    console.log('[bt] connected to', device.name || '(unnamed device)', '— heart_rate_measurement notifications started');
+    setBtState('live');
+    setPairMsg('');
+  }
+
   async function pairWatch(){
     if(!(navigator.bluetooth && navigator.bluetooth.requestDevice)){
       setBtState('unpaired');
@@ -1252,18 +1273,7 @@
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [HEART_RATE_SERVICE] }]
       });
-      btDevice = device;
-      device.addEventListener('gattserverdisconnected', onGattDisconnected);
-
-      const server = await device.gatt.connect();
-      const service = await server.getPrimaryService(HEART_RATE_SERVICE);
-      hrChar = await service.getCharacteristic(HEART_RATE_MEASUREMENT);
-      hrChar.addEventListener('characteristicvaluechanged', onHrValueChanged);
-      await hrChar.startNotifications();
-
-      console.log('[bt] connected to', device.name || '(unnamed device)', '— heart_rate_measurement notifications started');
-      setBtState('live');
-      setPairMsg('');
+      await connectToDevice(device);
     }catch(err){
       console.warn('[bt] pairing failed:', err);
       teardownBtDevice();
@@ -1274,8 +1284,40 @@
     }
   }
 
+  // Best-effort, silent reconnect to whichever watch was last paired here.
+  // getDevices() (unlike requestDevice()) needs no user gesture and only
+  // returns devices this origin was already granted — Chrome allows
+  // gatt.connect() on those without a fresh picker. Any failure (watch off,
+  // out of range, unsupported browser, nothing remembered) just leaves the
+  // app at 'unpaired', identical to a first-time visit — no toast, no error.
+  async function tryAutoReconnect(){
+    if(!(navigator.bluetooth && navigator.bluetooth.getDevices)) return;
+    let rememberedId;
+    try{ rememberedId = localStorage.getItem(BT_DEVICE_ID_KEY); }catch(_){ return; }
+    if(!rememberedId) return;
+
+    let devices;
+    try{ devices = await navigator.bluetooth.getDevices(); }catch(err){
+      console.warn('[bt] getDevices() failed', err);
+      return;
+    }
+    const device = devices.find(function(d){ return d.id === rememberedId; });
+    if(!device) return; // permission for that device is gone, or none remembered
+
+    setBtState('connecting');
+    resetLiveData();
+    try{
+      await connectToDevice(device);
+    }catch(err){
+      console.warn('[bt] auto-reconnect failed (watch likely off or out of range):', err);
+      teardownBtDevice();
+      setBtState('unpaired');
+    }
+  }
+
   pairBtn.addEventListener('click', pairWatch);
   setBtState('unpaired');
+  tryAutoReconnect();
 
   // ---- Hidden dev tool: synthetic RR feed (no physical watch needed) ----
   // Reuses ingestHrFrame() — the exact same parser/buffer path a real
