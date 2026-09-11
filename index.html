@@ -589,9 +589,13 @@
     border-color:var(--gold);
     background:rgba(228,201,137,0.22);
   }
-  #devPanel .dev-stop{
+  #devPanel .dev-actions{
+    display:flex;
+    gap:0.4rem;
     margin-top:0.5rem;
-    width:100%;
+  }
+  #devPanel .dev-actions button{
+    flex:1;
     padding:0.4rem;
     background:none;
     border:1px solid rgba(246,241,231,0.3);
@@ -600,11 +604,43 @@
     font-size:0.74rem;
     cursor:pointer;
   }
+
+  /* ---- non-blocking toast (e.g. watch disconnected) ---- */
+  .toast{
+    position:fixed;
+    left:50%;
+    top:calc(0.8rem + env(safe-area-inset-top));
+    transform:translateX(-50%) translateY(-10px);
+    width:calc(100% - 2rem);
+    max-width:460px;
+    z-index:60;
+    background:var(--maroon-dark);
+    color:var(--paper);
+    border:1px solid var(--gold);
+    border-radius:10px;
+    padding:0.65rem 0.9rem;
+    font-size:0.82rem;
+    font-weight:600;
+    text-align:center;
+    box-shadow:0 8px 24px rgba(0,0,0,0.25);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.25s ease, transform 0.25s ease;
+  }
+  .toast.is-visible{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  @media (prefers-reduced-motion:reduce){
+    .toast{ transition:none; }
+  }
 </style>
 </head>
 <body>
 
 <div id="app">
+
+  <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 
   <!-- SCREEN 1: mood selection -->
   <section id="screen-select" class="screen active">
@@ -1012,6 +1048,23 @@
     pairMsg.hidden = false;
   }
 
+  // Small non-blocking banner, visible from any screen (e.g. a mid-session
+  // disconnect) — never an error screen, just an FYI that auto-dismisses.
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(text, ms){
+    clearTimeout(toastTimer);
+    toastEl.textContent = text;
+    toastEl.hidden = false;
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ toastEl.classList.add('is-visible'); });
+    });
+    toastTimer = setTimeout(function(){
+      toastEl.classList.remove('is-visible');
+      setTimeout(function(){ toastEl.hidden = true; }, 260); // matches CSS transition
+    }, ms || 4000);
+  }
+
   // ---- Heart Rate Measurement parser (Bluetooth SIG 0x2A37) ----
   // Frame layout:
   //   byte 0        : flags
@@ -1164,9 +1217,14 @@
       try{ hrChar.removeEventListener('characteristicvaluechanged', onHrValueChanged); }catch(_){}
     }
     hrChar = null;
-    resetLiveData();
-    setBtState('disconnected');
-    setPairMsg('Watch disconnected.');
+    if(btDevice){
+      try{ btDevice.removeEventListener('gattserverdisconnected', onGattDisconnected); }catch(_){}
+    }
+    btDevice = null;
+    resetLiveData();          // buffer drops below hasLiveData()'s threshold immediately
+    setBtState('disconnected'); // dot flips, and selectMood() now falls back to mock data
+    setPairMsg('');            // clear any stale inline message (e.g. a dev-feed note)
+    showToast('Watch disconnected — showing simulated data');
   }
 
   function teardownBtDevice(){
@@ -1306,7 +1364,10 @@
       '<div class="dev-title"><span>Dev &middot; synthetic RR feed</span>' +
       '<button type="button" class="dev-close" aria-label="Close dev panel">&times;</button></div>' +
       '<div class="dev-moods"></div>' +
-      '<button type="button" class="dev-stop">Stop feed</button>';
+      '<div class="dev-actions">' +
+        '<button type="button" class="dev-disconnect">Simulate disconnect</button>' +
+        '<button type="button" class="dev-stop">Stop feed</button>' +
+      '</div>';
     const moodsEl = devPanel.querySelector('.dev-moods');
     MOODS.forEach(function(m){
       const btn = document.createElement('button');
@@ -1319,6 +1380,14 @@
     devPanel.querySelector('.dev-close').addEventListener('click', function(){
       devStop();
       devPanel.hidden = true;
+    });
+    // Fires the exact same gattserverdisconnected handler a real strap
+    // dropping mid-session would trigger — lets the whole disconnect path
+    // (toast, status dot, mock fallback, re-pair) be verified with no
+    // hardware involved.
+    devPanel.querySelector('.dev-disconnect').addEventListener('click', function(){
+      devStop(); // stop the synthetic beats first so they can't refill the buffer
+      onGattDisconnected();
     });
     devPanel.querySelector('.dev-stop').addEventListener('click', function(){
       devStop();
