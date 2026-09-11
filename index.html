@@ -358,6 +358,27 @@
   .stat-label .src-tag.is-live{ color:var(--coherent); }
   .stat-label .src-tag.is-sim{ color:var(--ink-soft); }
 
+  /* ---- live-only: expected-pattern badge ---- */
+  .pattern-badge{
+    align-self:flex-start;
+    display:inline-flex;
+    align-items:center;
+    gap:0.4rem;
+    margin:-0.2rem 0 0;
+    padding:0.32rem 0.7rem;
+    border-radius:20px;
+    font-size:0.76rem;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-soft);
+  }
+  .pattern-badge.is-match{
+    border-color:var(--coherent);
+    color:var(--coherent);
+    background:rgba(47,111,107,0.08);
+  }
+
   .modulator-panel{
     background:var(--paper);
     border:1px solid var(--line);
@@ -642,6 +663,7 @@
           <span class="stat-label">Residual HR</span>
         </div>
       </div>
+      <p class="pattern-badge" id="patternBadge" hidden></p>
       <div class="modulator-panel">
         <h2>Biochemical modulators</h2>
         <div id="hormoneList"></div>
@@ -862,6 +884,22 @@
     const srcEl = document.getElementById('coherenceSource');
     srcEl.textContent = isLive ? '(live)' : '(simulated)';
     srcEl.className = 'src-tag ' + (isLive ? 'is-live' : 'is-sim');
+
+    // Live-only observation: does the real coherence score land on the side
+    // of 50 this mood's group would predict? Framed as a neutral note, not
+    // a pass/fail — mismatches are expected some of the time.
+    const patternBadge = document.getElementById('patternBadge');
+    if(isLive){
+      const expectedCoherent = r.group === 'coherent';
+      const landedCoherent = r.coherence >= 50;
+      const matches = landedCoherent === expectedCoherent;
+      patternBadge.textContent = matches ? 'Matches expected pattern' : "Didn't match this time";
+      patternBadge.className = 'pattern-badge' + (matches ? ' is-match' : '');
+      patternBadge.hidden = false;
+    }else{
+      patternBadge.hidden = true;
+    }
+
     renderHormones(r);
     document.getElementById('noteCard').textContent = r.note;
     targetCoherence = r.coherence;
