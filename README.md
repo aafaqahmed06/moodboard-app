@@ -17,6 +17,26 @@ Three-screen flow, built for a phone screen:
    from Table 1 on the poster), and a one-line interpretation. "Log another
    mood" returns to screen 1.
 
+**Engagement features.**
+
+- **Home:** time-of-day greeting, a rotating prompt, a check-in streak with
+  a 7-day dot strip, and a "Did you know?" card citing one of the references.
+- **Mood picker:** every mood has its own color. A tap ripples, spotlights
+  the choice and vibrates briefly on Android before the reading starts.
+- **Loading:** a step-by-step checklist ticks off the three methodology
+  steps (HRV signal, motion filtering, cross-reference).
+- **Dashboard:**
+  - an animated coherence ring and a heart-rhythm trace
+  - a "Does this match how you feel?" check-in, saved to history as the
+    user's own ground truth
+  - a 1-minute guided coherent-breathing exercise (5 s in / 5 s out × 6)
+- **History ("Your journey"):** totals, streak, average coherence, a
+  coherence trend line and a mood-mix bar. Clearing it takes two taps.
+- **Milestones:** first check-in, a new streak day and every 10th check-in
+  get a toast and a small confetti burst.
+
+All animation is disabled under `prefers-reduced-motion`.
+
 **References.** A "Science" screen (topbar button, or "Read the science
 behind this" on the home screen) presents the paper's four references as
 animated cards, each tagged with the paper section it supports:

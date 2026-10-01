@@ -9,17 +9,39 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --maroon:#6B1420;
-    --maroon-dark:#480D16;
-    --gold:#C99A3E;
-    --gold-soft:#E4C989;
-    --cream:#F6F1E7;
-    --paper:#FFFCF6;
-    --ink:#2B211D;
-    --ink-soft:#6b5f57;
-    --coherent:#2F6F6B;
-    --incoherent:#B23A2E;
-    --line:#E4DACB;
+    /* surfaces + ink */
+    --bg:#F7F2EB;
+    --surface:#FFFFFF;
+    --surface-2:#F4EDE3;
+    --ink:#221917;
+    --ink-soft:#6F635C;
+    --ink-faint:#A79B91;
+    --line:#ECE3D6;
+    /* brand */
+    --brand:#7A1F2E;
+    --brand-deep:#4A1020;
+    --brand-tint:#F7E9EA;
+    --gold:#C29A45;
+    --gold-soft:#EBD9AE;
+    /* signal */
+    --coherent:#2F7D72;
+    --coherent-tint:#E3F1EE;
+    --incoherent:#C9503A;
+    --incoherent-tint:#FBEAE5;
+    /* shape */
+    --r-lg:20px;
+    --r:16px;
+    --r-sm:12px;
+    --shadow-sm:0 1px 2px rgba(60,30,20,0.05), 0 1px 3px rgba(60,30,20,0.04);
+    --shadow:0 10px 24px -12px rgba(74,16,32,0.22), 0 2px 6px rgba(60,30,20,0.05);
+    --shadow-lg:0 22px 44px -16px rgba(74,16,32,0.38);
+    --ease:cubic-bezier(.2,.7,.2,1);
+    --spring:cubic-bezier(.34,1.56,.64,1);
+    /* aliases used by the science screen + dev panel */
+    --maroon:var(--brand);
+    --maroon-dark:var(--brand-deep);
+    --cream:var(--surface-2);
+    --paper:var(--surface);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{
@@ -28,43 +50,74 @@
     overscroll-behavior:none;
   }
   body{
-    background:var(--cream);
+    background:var(--bg);
     color:var(--ink);
     font-family:'Inter',sans-serif;
     line-height:1.45;
+    -webkit-font-smoothing:antialiased;
   }
-  h1,h2{font-family:'Source Serif 4',serif;margin:0;}
-  button{font-family:inherit;}
+  h1,h2,h3{font-family:'Source Serif 4',serif;margin:0;}
+  button{font-family:inherit;color:inherit;}
+  button:focus-visible,a:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 
+  /* ---- top bar (shared by every screen) ---- */
   .topbar{
-    height:46px;
+    position:sticky;
+    top:0;
+    z-index:5;
+    height:56px;
     flex:0 0 auto;
     display:flex;
     align-items:center;
     justify-content:space-between;
     padding:0 1rem;
-    background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);
-    border-bottom:3px solid var(--gold);
-    color:var(--paper);
+    background:rgba(247,242,235,0.86);
+    -webkit-backdrop-filter:saturate(1.4) blur(12px);
+    backdrop-filter:saturate(1.4) blur(12px);
+    border-bottom:1px solid rgba(236,227,214,0.8);
   }
-  .topbar .brand{
-    font-size:0.82rem;
-    font-weight:600;
-    letter-spacing:0.01em;
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    font-size:0.86rem;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:var(--brand);
+  }
+  .brand-mark{
+    width:28px;height:28px;
+    border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,#9C2B3E 0%,var(--brand-deep) 100%);
+    color:#fff;
+    font-size:0.8rem;
+    box-shadow:0 4px 10px -4px rgba(122,31,46,0.6);
+    animation:markBeat 2.4s ease-in-out infinite;
+  }
+  @keyframes markBeat{
+    0%,60%,100%{ transform:scale(1); }
+    8%{ transform:scale(1.12); }
+    16%{ transform:scale(0.97); }
+    24%{ transform:scale(1.06); }
   }
   .topbar .back-btn{
-    background:none;
-    border:none;
-    color:var(--gold-soft);
-    font-size:0.82rem;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:999px;
+    color:var(--ink);
+    font-size:0.76rem;
     font-weight:600;
-    padding:0.3rem 0.2rem;
+    padding:0.38rem 0.75rem;
     cursor:pointer;
+    box-shadow:var(--shadow-sm);
+    transition:transform 0.15s var(--ease), background 0.15s ease;
   }
+  .topbar .back-btn:active{ transform:scale(0.95); background:var(--surface-2); }
   .topbar-right{
     display:flex;
     align-items:center;
-    gap:0.55rem;
+    gap:0.45rem;
   }
 
   /* ---- Bluetooth watch status dot (topbar) ---- */
@@ -72,9 +125,10 @@
     position:relative;
     width:10px;
     height:10px;
+    margin-right:0.15rem;
     border-radius:50%;
     flex:0 0 auto;
-    color:rgba(246,241,231,0.45);      /* unpaired: muted on the maroon bar */
+    color:#D3C8BA;
     background:currentColor;
     transition:color 0.2s ease, box-shadow 0.2s ease;
   }
@@ -89,7 +143,7 @@
   .bt-dot.is-connecting{ color:var(--gold); }
   .bt-dot.is-live{ color:var(--coherent); }
   .bt-dot.is-disconnected{
-    color:rgba(246,241,231,0.45);
+    color:#D3C8BA;
     box-shadow:0 0 0 2px var(--incoherent);
   }
   .bt-dot.is-connecting::after,
@@ -100,11 +154,9 @@
     0%{ transform:scale(1); opacity:0.55; }
     100%{ transform:scale(2.6); opacity:0; }
   }
-  @media (prefers-reduced-motion:reduce){
-    .bt-dot::after,.pair-dot::after{ animation:none !important; }
-  }
 
   #app{
+    position:relative;
     height:100dvh;
     height:100vh;
     display:flex;
@@ -112,6 +164,10 @@
     max-width:520px;
     margin:0 auto;
     overflow:hidden;
+    background:
+      radial-gradient(120% 40% at 100% 0%, rgba(194,154,69,0.10) 0%, transparent 60%),
+      radial-gradient(90% 35% at 0% 0%, rgba(122,31,46,0.07) 0%, transparent 60%),
+      var(--bg);
   }
 
   .screen{
@@ -122,91 +178,246 @@
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     opacity:1;
-    transition:opacity 0.28s ease;
+    transform:none;
+    transition:opacity 0.28s ease, transform 0.28s var(--ease);
   }
   .screen.active{display:flex;}
-  .screen.fade-out{opacity:0;}
-  .screen.fade-in{opacity:0;}
-  @media (prefers-reduced-motion:reduce){
-    .screen{transition:none;}
+  .screen.fade-out{opacity:0;transform:translateY(-6px);}
+  .screen.fade-in{opacity:0;transform:translateY(10px);}
+
+  /* staggered entrance for blocks inside a freshly shown screen */
+  .stagger > *{
+    animation:riseIn 0.55s var(--ease) both;
+  }
+  .stagger > *:nth-child(1){ animation-delay:0.02s; }
+  .stagger > *:nth-child(2){ animation-delay:0.08s; }
+  .stagger > *:nth-child(3){ animation-delay:0.14s; }
+  .stagger > *:nth-child(4){ animation-delay:0.20s; }
+  .stagger > *:nth-child(5){ animation-delay:0.26s; }
+  .stagger > *:nth-child(6){ animation-delay:0.32s; }
+  .stagger > *:nth-child(7){ animation-delay:0.38s; }
+  .stagger > *:nth-child(8){ animation-delay:0.44s; }
+  .stagger > *:nth-child(n+9){ animation-delay:0.5s; }
+  @keyframes riseIn{
+    from{ opacity:0; transform:translateY(12px); }
+    to{ opacity:1; transform:none; }
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    box-shadow:var(--shadow-sm);
+  }
+  .eyebrow{
+    margin:0;
+    font-size:0.66rem;
+    font-weight:700;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
   }
 
   /* ---- Screen 1: mood select ---- */
   #screen-select .content{
-    padding:1.2rem 1.1rem calc(1.5rem + env(safe-area-inset-bottom));
-    flex:1;
+    padding:1.1rem 1.1rem calc(1.6rem + env(safe-area-inset-bottom));
     display:flex;
     flex-direction:column;
+    gap:1rem;
   }
-  #screen-select h1{
-    font-size:1.35rem;
-    font-weight:700;
-    margin-bottom:0.3rem;
+  .greet{ display:flex; flex-direction:column; gap:0.3rem; }
+  .greet-hello{
+    display:flex;
+    align-items:center;
+    gap:0.4rem;
+    font-size:0.82rem;
+    font-weight:600;
+    color:var(--gold);
   }
-  #screen-select .sub{
-    font-size:0.88rem;
+  .wave{ display:inline-block; transform-origin:70% 70%; animation:wave 2.6s ease-in-out 0.6s 2; }
+  @keyframes wave{
+    0%,60%,100%{ transform:rotate(0); }
+    10%,30%{ transform:rotate(14deg); }
+    20%,40%{ transform:rotate(-8deg); }
+  }
+  .greet h1{
+    font-size:1.65rem;
+    line-height:1.15;
+    letter-spacing:-0.01em;
+  }
+  .greet h1 em{
+    font-style:normal;
+    background:linear-gradient(90deg,var(--brand) 0%,#B0405A 50%,var(--brand) 100%);
+    background-size:200% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:inkShift 6s ease-in-out infinite;
+  }
+  @keyframes inkShift{ 50%{ background-position:100% 0; } }
+  .prompt{
+    margin:0;
+    min-height:1.4em;
+    font-size:0.9rem;
     color:var(--ink-soft);
-    margin:0 0 1.1rem;
+    transition:opacity 0.35s ease, transform 0.35s ease;
+  }
+  .prompt.is-hidden{ opacity:0; transform:translateY(4px); }
+
+  .streak-strip{
+    display:flex;
+    align-items:center;
+    gap:0.7rem;
+    padding:0.7rem 0.85rem;
+  }
+  .streak-flame{
+    width:38px;height:38px;
+    flex:0 0 auto;
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.2rem;
+    background:linear-gradient(140deg,#FFF3DC,#F6E2B8);
+  }
+  .streak-strip.is-active .streak-flame{ animation:flame 1.8s ease-in-out infinite; }
+  @keyframes flame{
+    0%,100%{ transform:scale(1) rotate(0); }
+    50%{ transform:scale(1.07) rotate(-3deg); }
+  }
+  .streak-text{ flex:1; min-width:0; }
+  .streak-text b{ display:block; font-size:0.88rem; }
+  .streak-text span{ display:block; font-size:0.74rem; color:var(--ink-soft); }
+  .streak-dots{ display:flex; gap:4px; }
+  .streak-dots i{
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--line);
+  }
+  .streak-dots i.on{ background:var(--gold); }
+  .streak-dots i.today{ box-shadow:0 0 0 2px rgba(194,154,69,0.3); }
+
+  .mood-section-label{
+    display:flex;
+    align-items:center;
+    gap:0.5rem;
+    margin:0.2rem 0 -0.35rem;
+  }
+  .mood-section-label::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
   }
   .mood-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:0.7rem;
-    flex:1;
+    grid-template-columns:repeat(3,1fr);
+    gap:0.6rem;
   }
   .mood-card{
-    background:var(--paper);
+    --mc:var(--brand);
+    --mc-tint:var(--brand-tint);
+    position:relative;
+    overflow:hidden;
+    background:var(--surface);
     border:1px solid var(--line);
-    border-radius:10px;
-    min-height:108px;
+    border-radius:var(--r);
+    min-height:112px;
+    padding:0.75rem 0.4rem 0.65rem;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:0.35rem;
+    gap:0.3rem;
     cursor:pointer;
     touch-action:manipulation;
-    transition:transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    box-shadow:var(--shadow-sm);
+    transition:transform 0.2s var(--spring), box-shadow 0.2s ease, border-color 0.2s ease, opacity 0.25s ease, filter 0.25s ease;
   }
-  .mood-card:active{
-    transform:scale(0.96);
-    border-color:var(--gold);
-    box-shadow:0 0 0 3px rgba(201,154,62,0.18);
-  }
-  .mood-card .emoji{font-size:1.9rem;}
-  .mood-card .label{font-size:0.92rem;font-weight:600;}
-  .select-footnote{
-    text-align:center;
-    font-size:0.72rem;
-    color:var(--ink-soft);
-    margin-top:1rem;
-  }
-  /* ---- "Pair my watch" — lower-emphasis outline button ---- */
-  .pair-btn{
-    align-self:center;
-    margin-top:0.9rem;
-    display:inline-flex;
-    align-items:center;
-    gap:0.5rem;
-    padding:0.5rem 0.95rem;
-    background:transparent;
-    border:1px solid var(--line);
-    border-radius:8px;
-    color:var(--ink-soft);
-    font-size:0.82rem;
-    font-weight:600;
-    cursor:pointer;
-    touch-action:manipulation;
-    transition:border-color 0.15s ease, color 0.15s ease;
-  }
-  .pair-btn:active{ background:var(--cream); }
-  .pair-dot{
-    position:relative;
-    width:8px;
-    height:8px;
+  .mood-card .emoji-bubble{
+    width:48px;height:48px;
     border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;
+    background:var(--mc-tint);
+    transition:transform 0.3s var(--spring);
+  }
+  .mood-card .label{ font-size:0.86rem; font-weight:700; }
+  .mood-card .desc{ font-size:0.68rem; color:var(--ink-faint); margin-top:-0.2rem; }
+  .mood-card::after{                    /* colored underline */
+    content:"";
+    position:absolute;
+    left:28%;right:28%;bottom:0;
+    height:3px;
+    border-radius:3px 3px 0 0;
+    background:var(--mc);
+    transform:scaleX(0);
+    transition:transform 0.25s var(--ease);
+  }
+  @media (hover:hover){
+    .mood-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow); border-color:transparent; }
+    .mood-card:hover .emoji-bubble{ transform:scale(1.08) rotate(-4deg); }
+    .mood-card:hover::after{ transform:scaleX(1); }
+  }
+  .mood-card:active{ transform:scale(0.95); }
+  .mood-card .ripple{
+    position:absolute;
+    width:20px;height:20px;
+    margin:-10px 0 0 -10px;
+    border-radius:50%;
+    background:var(--mc);
+    opacity:0.28;
+    pointer-events:none;
+    animation:ripple 0.6s ease-out forwards;
+  }
+  @keyframes ripple{ to{ transform:scale(14); opacity:0; } }
+  .mood-grid.has-pick .mood-card{ opacity:0.35; filter:saturate(0.4); transform:scale(0.97); }
+  .mood-grid.has-pick .mood-card.is-picked{
+    opacity:1;
+    filter:none;
+    transform:scale(1.06);
+    border-color:var(--mc);
+    box-shadow:0 0 0 3px var(--mc-tint), var(--shadow);
+  }
+  .mood-card.is-picked .emoji-bubble{ animation:pop 0.45s var(--spring); }
+  @keyframes pop{ 40%{ transform:scale(1.25); } }
+
+  .action-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:0.6rem;
+  }
+  .action-tile{
+    display:flex;
+    align-items:center;
+    gap:0.6rem;
+    padding:0.7rem 0.75rem;
+    text-align:left;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:transform 0.15s var(--ease), border-color 0.2s ease;
+  }
+  .action-tile:active{ transform:scale(0.97); }
+  .action-icon{
+    position:relative;
+    width:34px;height:34px;
     flex:0 0 auto;
-    color:#B9AC9A;                      /* unpaired */
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;
+    background:var(--surface-2);
+  }
+  .action-text{ min-width:0; }
+  .action-text b{ display:block; font-size:0.8rem; line-height:1.2; }
+  .action-text span{ display:block; font-size:0.68rem; color:var(--ink-faint); }
+
+  /* "Pair my watch" tile */
+  .pair-dot{
+    position:absolute;
+    right:-2px;top:-2px;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    border:2px solid var(--surface);
+    color:#CFC4B6;
     background:currentColor;
     transition:color 0.2s ease;
   }
@@ -218,11 +429,11 @@
     background:currentColor;
     opacity:0;
   }
-  .pair-btn.is-connecting{ border-color:var(--gold); color:var(--maroon); }
+  .pair-btn.is-connecting{ border-color:var(--gold); }
   .pair-btn.is-connecting .pair-dot{ color:var(--gold); }
-  .pair-btn.is-live{ border-color:var(--coherent); color:var(--coherent); }
+  .pair-btn.is-live{ border-color:var(--coherent); }
   .pair-btn.is-live .pair-dot{ color:var(--coherent); }
-  .pair-btn.is-disconnected{ border-color:var(--incoherent); color:var(--incoherent); }
+  .pair-btn.is-disconnected{ border-color:var(--incoherent); }
   .pair-btn.is-disconnected .pair-dot{ color:var(--incoherent); }
   .pair-btn.is-connecting .pair-dot::after,
   .pair-btn.is-live .pair-dot::after{
@@ -230,13 +441,57 @@
   }
   .pair-btn:disabled{ cursor:default; opacity:0.85; }
   .pair-msg{
-    align-self:center;
-    max-width:17rem;
-    margin-top:0.5rem;
+    margin:-0.4rem 0 0;
     text-align:center;
     font-size:0.76rem;
     line-height:1.4;
     color:var(--ink-soft);
+  }
+
+  .insight-card{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    gap:0.75rem;
+    align-items:flex-start;
+    width:100%;
+    text-align:left;
+    padding:0.85rem 0.9rem;
+    cursor:pointer;
+    background:linear-gradient(135deg,#FFFDF8 0%,#FBF3E3 100%);
+    border-color:#EEDFBF;
+  }
+  .insight-icon{
+    width:34px;height:34px;
+    flex:0 0 auto;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--gold);
+    color:#fff;
+    font-size:0.95rem;
+    box-shadow:0 0 0 0 rgba(194,154,69,0.5);
+    animation:bulb 2.6s ease-out infinite;
+  }
+  @keyframes bulb{
+    0%{ box-shadow:0 0 0 0 rgba(194,154,69,0.45); }
+    70%,100%{ box-shadow:0 0 0 10px rgba(194,154,69,0); }
+  }
+  .insight-body{ flex:1; min-width:0; }
+  .insight-text{
+    display:block;
+    margin-top:0.15rem;
+    font-size:0.85rem;
+    line-height:1.4;
+    transition:opacity 0.35s ease;
+  }
+  .insight-text.is-hidden{ opacity:0; }
+  .insight-src{ display:block; margin-top:0.25rem; font-size:0.68rem; font-weight:700; color:var(--gold); }
+
+  .select-footnote{
+    text-align:center;
+    font-size:0.7rem;
+    color:var(--ink-faint);
+    margin:0;
   }
 
   /* ---- Screen 2: loading ---- */
@@ -245,157 +500,338 @@
     justify-content:center;
   }
   .loading-inner{
+    width:100%;
+    max-width:330px;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:1.4rem;
-    padding:2rem;
+    gap:1.3rem;
+    padding:2rem 1.2rem;
     text-align:center;
   }
   .pulse-wrap{
     position:relative;
-    width:88px;height:88px;
+    width:120px;height:120px;
     display:flex;align-items:center;justify-content:center;
   }
   .pulse-ring{
     position:absolute;
     inset:0;
-    border:3px solid var(--maroon);
+    border:2px solid var(--pick, var(--brand));
     border-radius:50%;
-    animation:pulse 1.4s ease-out infinite;
+    animation:pulse 1.6s ease-out infinite;
   }
-  .pulse-ring.d2{animation-delay:0.45s;}
+  .pulse-ring.d2{animation-delay:0.53s;}
+  .pulse-ring.d3{animation-delay:1.06s;}
   .pulse-core{
-    width:40px;height:40px;
+    width:64px;height:64px;
     border-radius:50%;
-    background:var(--maroon);
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.35), transparent 50%), var(--pick, var(--brand));
     display:flex;align-items:center;justify-content:center;
-    font-size:1.2rem;
+    font-size:1.8rem;
+    box-shadow:0 12px 28px -10px var(--pick, var(--brand));
+    animation:corebeat 0.9s ease-in-out infinite;
+  }
+  @keyframes corebeat{
+    0%,100%{ transform:scale(1); }
+    15%{ transform:scale(1.1); }
+    30%{ transform:scale(0.98); }
+    45%{ transform:scale(1.05); }
   }
   @keyframes pulse{
-    0%{transform:scale(0.5);opacity:0.9;}
-    100%{transform:scale(1.6);opacity:0;}
+    0%{transform:scale(0.55);opacity:0.8;}
+    100%{transform:scale(1.5);opacity:0;}
   }
-  #loadingStatus{
-    font-size:0.94rem;
-    font-weight:500;
-    color:var(--ink-soft);
-    min-height:1.4em;
+  .loading-title{ font-size:1.15rem; }
+  #loadingStatus{ display:none; }
+  .steps{
+    width:100%;
+    list-style:none;
+    margin:0;
+    padding:0.35rem;
+    text-align:left;
   }
+  .step{
+    display:flex;
+    align-items:center;
+    gap:0.65rem;
+    padding:0.55rem 0.6rem;
+    border-radius:10px;
+    font-size:0.84rem;
+    color:var(--ink-faint);
+    transition:color 0.3s ease, background 0.3s ease;
+  }
+  .step-icon{
+    position:relative;
+    width:22px;height:22px;
+    flex:0 0 auto;
+    border-radius:50%;
+    border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.7rem;
+    color:#fff;
+    transition:background 0.3s ease, border-color 0.3s ease;
+  }
+  .step.is-active{ color:var(--ink); background:var(--surface-2); font-weight:600; }
+  .step.is-active .step-icon{
+    border-color:var(--gold) transparent var(--gold) var(--gold);
+    animation:spin 0.8s linear infinite;
+  }
+  .step.is-done{ color:var(--ink); }
+  .step.is-done .step-icon{ background:var(--coherent); border-color:var(--coherent); animation:pop 0.35s var(--spring); }
+  .step.is-done .step-icon::before{ content:"\2713"; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
   .load-bar{
-    width:180px;
-    height:4px;
+    width:100%;
+    height:5px;
     background:var(--line);
-    border-radius:2px;
+    border-radius:3px;
     overflow:hidden;
   }
   .load-bar-fill{
     height:100%;
     width:0%;
-    background:var(--gold);
-    border-radius:2px;
-    animation:fill 3s linear forwards;
+    background:linear-gradient(90deg,var(--gold),var(--pick, var(--brand)));
+    border-radius:3px;
   }
+  .screen.active .load-bar-fill{ animation:fill 3s linear forwards; }
   @keyframes fill{ to{ width:100%; } }
 
   /* ---- Screen 3: dashboard ---- */
   #screen-dashboard .content{
-    padding:1rem 1.1rem calc(1.4rem + env(safe-area-inset-bottom));
+    padding:1rem 1.1rem calc(1.6rem + env(safe-area-inset-bottom));
     display:flex;
     flex-direction:column;
-    gap:0.9rem;
+    gap:0.85rem;
+  }
+  .result-hero{
+    --mc:var(--brand);
+    position:relative;
+    overflow:hidden;
+    border-radius:var(--r-lg);
+    padding:1rem 1rem 1.05rem;
+    color:#fff;
+    background:
+      radial-gradient(120% 90% at 100% 0%, rgba(255,255,255,0.18) 0%, transparent 55%),
+      linear-gradient(140deg, var(--mc) 0%, color-mix(in srgb, var(--mc) 55%, #1a0d10) 100%);
+    box-shadow:var(--shadow-lg);
+  }
+  .result-hero::after{                  /* soft orb */
+    content:"";
+    position:absolute;
+    right:-40px;bottom:-60px;
+    width:170px;height:170px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.08);
   }
   .mood-chip{
-    align-self:flex-start;
     display:flex;
     align-items:center;
-    gap:0.45rem;
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:20px;
-    padding:0.35rem 0.8rem 0.35rem 0.55rem;
-    font-size:0.88rem;
-    font-weight:600;
+    gap:0.65rem;
   }
-  .mood-chip .emoji{font-size:1.15rem;}
-
-  canvas#rhythmCanvas{
-    width:100%;
-    height:120px;
-    display:block;
-    border-radius:8px;
-    background:var(--paper);
-    border:1px solid var(--line);
+  .mood-chip .emoji{
+    width:46px;height:46px;
+    border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.55rem;
+    background:rgba(255,255,255,0.18);
   }
-
-  .stat-pair{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:0.7rem;
+  .mood-chip .chip-text small{ display:block; font-size:0.7rem; opacity:0.8; font-weight:500; }
+  .mood-chip .chip-text b{ display:block; font-family:'Source Serif 4',serif; font-size:1.3rem; line-height:1.15; }
+  .hero-stats{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    margin-top:0.95rem;
   }
-  .stat-card{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:0.75rem 0.85rem;
+  .ring{
+    position:relative;
+    width:96px;height:96px;
+    flex:0 0 auto;
   }
-  .stat-value{
+  .ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring circle{ fill:none; stroke-width:9; }
+  .ring .ring-track{ stroke:rgba(255,255,255,0.18); }
+  .ring .ring-val{
+    stroke:#fff;
+    stroke-linecap:round;
+    stroke-dasharray:251.3;
+    stroke-dashoffset:251.3;
+    transition:stroke-dashoffset 1.2s var(--ease);
+  }
+  .ring-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  .ring-center .stat-value{
+    font-family:'Source Serif 4',serif;
+    font-size:1.7rem;
+    font-weight:700;
+    line-height:1;
+    color:#fff !important;
+    font-variant-numeric:tabular-nums;
+  }
+  .ring-center small{ font-size:0.6rem; opacity:0.8; letter-spacing:0.06em; text-transform:uppercase; margin-top:0.15rem; }
+  .hero-side{ flex:1; min-width:0; display:flex; flex-direction:column; gap:0.45rem; }
+  .hero-metric{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.16);
+    border-radius:12px;
+    padding:0.45rem 0.65rem;
+  }
+  .hero-metric .stat-value{
     display:block;
     font-family:'Source Serif 4',serif;
-    font-size:1.55rem;
+    font-size:1.15rem;
     font-weight:700;
+    font-variant-numeric:tabular-nums;
   }
   .stat-label{
     display:block;
+    font-size:0.68rem;
+    opacity:0.85;
+  }
+  .stat-label .src-tag{ font-weight:700; margin-left:0.3rem; }
+  .verdict{
+    display:inline-flex;
+    align-items:center;
+    gap:0.35rem;
+    align-self:flex-start;
     font-size:0.72rem;
-    color:var(--ink-soft);
-    margin-top:0.15rem;
-  }
-  .stat-label .src-tag{
     font-weight:700;
-    margin-left:0.3rem;
+    padding:0.25rem 0.6rem;
+    border-radius:999px;
+    background:rgba(255,255,255,0.92);
+    color:var(--mc);
   }
-  .stat-label .src-tag.is-live{ color:var(--coherent); }
-  .stat-label .src-tag.is-sim{ color:var(--ink-soft); }
 
-  /* ---- live-only: expected-pattern badge ---- */
+  .panel{
+    padding:0.85rem 0.9rem 0.9rem;
+  }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:0.5rem;
+    margin-bottom:0.65rem;
+  }
+  .panel-head h2{
+    font-family:'Inter',sans-serif;
+    font-size:0.7rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--ink-faint);
+  }
+  .legend{ display:flex; gap:0.6rem; font-size:0.66rem; color:var(--ink-soft); }
+  .legend i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.25rem; vertical-align:middle; }
+  canvas#rhythmCanvas{
+    width:100%;
+    height:110px;
+    display:block;
+    border-radius:10px;
+    background:
+      linear-gradient(var(--surface-2) 1px, transparent 1px) 0 0/100% 27.5px,
+      var(--surface);
+  }
+
+  /* live-only: expected-pattern badge */
   .pattern-badge{
     align-self:flex-start;
     display:inline-flex;
     align-items:center;
     gap:0.4rem;
-    margin:-0.2rem 0 0;
+    margin:0;
     padding:0.32rem 0.7rem;
-    border-radius:20px;
-    font-size:0.76rem;
+    border-radius:999px;
+    font-size:0.74rem;
     font-weight:600;
     border:1px solid var(--line);
-    background:var(--paper);
+    background:var(--surface);
     color:var(--ink-soft);
   }
   .pattern-badge[hidden]{ display:none; }
   .pattern-badge.is-match{
     border-color:var(--coherent);
     color:var(--coherent);
-    background:rgba(47,111,107,0.08);
+    background:var(--coherent-tint);
   }
 
-  .modulator-panel{
-    background:var(--paper);
+  /* "does this match?" check-in */
+  .checkin{ padding:0.85rem 0.9rem; }
+  .checkin-q{ font-size:0.9rem; font-weight:600; margin:0 0 0.6rem; }
+  .checkin-opts{ display:flex; gap:0.5rem; }
+  .checkin-opt{
+    flex:1;
+    padding:0.6rem 0.5rem;
+    border-radius:12px;
     border:1px solid var(--line);
-    border-radius:8px;
-    padding:0.85rem 0.9rem 0.9rem;
+    background:var(--surface-2);
+    font-size:0.82rem;
+    font-weight:600;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:transform 0.2s var(--spring), background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   }
-  .modulator-panel h2{
-    font-family:'Inter',sans-serif;
-    font-size:0.72rem;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:0.06em;
+  .checkin-opt:active{ transform:scale(0.94); }
+  .checkin-opt.is-chosen{ background:var(--brand); border-color:var(--brand); color:#fff; transform:scale(1.03); }
+  .checkin-opts.is-answered .checkin-opt:not(.is-chosen){ opacity:0.45; }
+  .checkin-thanks{
+    margin:0.6rem 0 0;
+    font-size:0.78rem;
     color:var(--ink-soft);
-    margin-bottom:0.75rem;
+    animation:riseIn 0.4s var(--ease) both;
   }
-  .horm{ margin-bottom:0.78rem; }
+
+  /* try-this: guided breathing CTA */
+  .try-card{
+    display:flex;
+    align-items:center;
+    gap:0.8rem;
+    width:100%;
+    text-align:left;
+    padding:0.85rem 0.9rem;
+    cursor:pointer;
+    touch-action:manipulation;
+    border-color:transparent;
+    background:linear-gradient(135deg,var(--coherent-tint) 0%,#F1F8F6 100%);
+    transition:transform 0.15s var(--ease);
+  }
+  .try-card:active{ transform:scale(0.98); }
+  .try-orb{
+    position:relative;
+    width:46px;height:46px;
+    flex:0 0 auto;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #6DB3A8, var(--coherent));
+    animation:breathe 10s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(0.82); }
+    50%{ transform:scale(1); }
+  }
+  .try-text{ flex:1; min-width:0; }
+  .try-text small{ display:block; font-size:0.64rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--coherent); }
+  .try-text b{ display:block; font-size:0.92rem; margin-top:0.1rem; }
+  .try-text span{ display:block; font-size:0.74rem; color:var(--ink-soft); }
+  .try-go{
+    flex:0 0 auto;
+    width:34px;height:34px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--coherent);
+    color:#fff;
+    font-size:0.85rem;
+  }
+
+  .modulator-panel h2{ margin:0; }
+  .horm{ margin-bottom:0.75rem; }
   .horm:last-child{ margin-bottom:0; }
   .horm-head{
     display:flex;
@@ -406,130 +842,291 @@
   }
   .horm-name{ font-weight:600; display:flex; align-items:center; gap:0.4rem; }
   .horm-name .primary-tag{
-    font-size:0.58rem;
+    font-size:0.56rem;
     font-weight:700;
     text-transform:uppercase;
-    letter-spacing:0.05em;
-    color:var(--maroon);
-    border:1px solid var(--gold);
-    background:var(--cream);
-    border-radius:4px;
-    padding:0.04rem 0.32rem;
+    letter-spacing:0.06em;
+    color:var(--brand);
+    background:var(--brand-tint);
+    border-radius:999px;
+    padding:0.1rem 0.45rem;
   }
   .horm-level{
-    font-size:0.74rem;
+    font-size:0.72rem;
     color:var(--ink-soft);
     font-variant-numeric:tabular-nums;
   }
   .horm-track{
     height:8px;
-    background:var(--line);
-    border-radius:5px;
+    background:var(--surface-2);
+    border-radius:999px;
     overflow:hidden;
   }
   .horm-fill{
+    position:relative;
     height:100%;
     width:0%;
-    border-radius:5px;
-    transition:width 0.9s cubic-bezier(.2,.7,.2,1);
+    border-radius:999px;
+    transition:width 1s var(--ease);
   }
-  .horm.is-primary .horm-track{
-    box-shadow:0 0 0 2px rgba(201,154,62,0.35);
+  .horm.is-primary .horm-fill::after{   /* shimmer on the primary driver */
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);
+    background-size:50% 100%;
+    background-repeat:no-repeat;
+    animation:barShine 2.4s ease-in-out 1s infinite;
+  }
+  @keyframes barShine{
+    from{ background-position:-60% 0; }
+    to{ background-position:160% 0; }
   }
 
   .note-card{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-left:3px solid var(--gold);
-    border-radius:6px;
-    padding:0.75rem 0.9rem;
-    font-size:0.86rem;
+    display:flex;
+    gap:0.65rem;
+    padding:0.8rem 0.9rem;
+    font-size:0.85rem;
     color:var(--ink);
   }
+  .note-card::before{
+    content:"\201C";
+    font-family:'Source Serif 4',serif;
+    font-size:2rem;
+    line-height:1;
+    color:var(--gold);
+  }
 
-  .new-reading-btn{
-    margin-top:0.2rem;
+  .btn-row{ display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+  .new-reading-btn,.ghost-btn{
     width:100%;
     padding:0.85rem;
-    background:var(--maroon);
-    color:var(--paper);
-    border:none;
-    border-radius:8px;
-    font-size:0.95rem;
+    border-radius:14px;
+    font-size:0.9rem;
     font-weight:600;
     cursor:pointer;
     touch-action:manipulation;
+    transition:transform 0.15s var(--ease), filter 0.15s ease;
   }
-  .new-reading-btn:active{background:var(--maroon-dark);}
+  .new-reading-btn{
+    background:linear-gradient(140deg,#962A3D 0%,var(--brand-deep) 100%);
+    color:#fff;
+    border:none;
+    box-shadow:0 10px 20px -10px rgba(122,31,46,0.7);
+  }
+  .ghost-btn{
+    background:var(--surface);
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .new-reading-btn:active,.ghost-btn:active{ transform:scale(0.97); }
 
   .demo-disclaimer{
     font-size:0.68rem;
-    color:var(--ink-soft);
+    color:var(--ink-faint);
     text-align:center;
+    margin:0;
   }
 
   /* ---- Screen 4: history ---- */
   #screen-history .content{
-    padding:1rem 1.1rem calc(1.4rem + env(safe-area-inset-bottom));
+    padding:1rem 1.1rem calc(1.6rem + env(safe-area-inset-bottom));
     display:flex;
     flex-direction:column;
-    gap:0.7rem;
+    gap:0.8rem;
   }
   .history-head{
     display:flex;
     align-items:baseline;
     justify-content:space-between;
   }
-  .history-head h2{ font-size:1.15rem; font-weight:700; }
+  .history-head h2{ font-size:1.35rem; font-weight:700; }
   .clear-btn{
     background:none;
     border:1px solid var(--line);
-    border-radius:6px;
+    border-radius:999px;
     color:var(--ink-soft);
-    font-size:0.74rem;
+    font-size:0.72rem;
     font-weight:600;
-    padding:0.3rem 0.6rem;
+    padding:0.3rem 0.7rem;
     cursor:pointer;
     touch-action:manipulation;
   }
-  .clear-btn:active{ background:var(--cream); }
+  .clear-btn.is-confirm{ border-color:var(--incoherent); color:#fff; background:var(--incoherent); }
+  .summary{ padding:0.9rem; }
+  .summary-stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.5rem; text-align:center; }
+  .summary-stats b{
+    display:block;
+    font-family:'Source Serif 4',serif;
+    font-size:1.35rem;
+    color:var(--brand);
+    font-variant-numeric:tabular-nums;
+  }
+  .summary-stats span{ display:block; font-size:0.66rem; color:var(--ink-soft); }
+  .spark-wrap{ margin-top:0.8rem; }
+  .spark-wrap svg{ width:100%; height:70px; display:block; overflow:visible; }
+  .spark-line{
+    fill:none;
+    stroke:var(--brand);
+    stroke-width:2;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+    stroke-dasharray:1000;
+    stroke-dashoffset:1000;
+    animation:sparkDraw 1.4s var(--ease) forwards;
+  }
+  @keyframes sparkDraw{ to{ stroke-dashoffset:0; } }
+  .spark-area{ fill:url(#sparkFill); opacity:0; animation:fadeIn 0.8s ease 0.6s forwards; }
+  .spark-dot{ opacity:0; animation:fadeIn 0.3s ease forwards; }
+  @keyframes fadeIn{ to{ opacity:1; } }
+  .spark-mid{ stroke:var(--line); stroke-dasharray:3 4; }
+  .spark-cap{ display:flex; justify-content:space-between; font-size:0.62rem; color:var(--ink-faint); margin-top:0.2rem; }
+  .mix-bar{
+    display:flex;
+    height:10px;
+    margin-top:0.8rem;
+    border-radius:999px;
+    overflow:hidden;
+    background:var(--surface-2);
+  }
+  .mix-bar span{ height:100%; transform-origin:left; animation:growX 0.8s var(--ease) both; }
+  @keyframes growX{ from{ transform:scaleX(0); } }
+  .mix-key{ display:flex; flex-wrap:wrap; gap:0.3rem 0.7rem; margin-top:0.45rem; font-size:0.68rem; color:var(--ink-soft); }
+  .mix-key i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.25rem; vertical-align:middle; }
+
+  #historyList{ display:flex; flex-direction:column; gap:0.5rem; }
   .history-item{
+    --mc:var(--brand);
+    --mc-tint:var(--brand-tint);
     width:100%;
     text-align:left;
-    background:var(--paper);
+    background:var(--surface);
     border:1px solid var(--line);
-    border-radius:8px;
-    padding:0.65rem 0.8rem;
+    border-radius:14px;
+    padding:0.6rem 0.75rem;
     display:flex;
     align-items:center;
     gap:0.7rem;
     cursor:pointer;
     touch-action:manipulation;
+    box-shadow:var(--shadow-sm);
+    animation:riseIn 0.45s var(--ease) both;
+    transition:transform 0.15s var(--ease);
   }
-  .history-item:active{ border-color:var(--gold); }
-  .history-item .h-emoji{ font-size:1.4rem; flex:0 0 auto; }
+  .history-item:active{ transform:scale(0.98); }
+  .history-item .h-emoji{
+    width:38px;height:38px;
+    flex:0 0 auto;
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.25rem;
+    background:var(--mc-tint);
+  }
   .history-item .h-main{ flex:1; min-width:0; }
   .history-item .h-mood{ display:block; font-size:0.9rem; font-weight:600; }
-  .history-item .h-time{ display:block; font-size:0.72rem; color:var(--ink-soft); }
+  .history-item .h-time{ display:block; font-size:0.7rem; color:var(--ink-faint); }
+  .history-item .h-fb{ margin-left:0.3rem; }
   .history-item .h-stats{
     flex:0 0 auto;
     text-align:right;
-    font-size:0.72rem;
+    font-size:0.68rem;
     color:var(--ink-soft);
     font-variant-numeric:tabular-nums;
   }
   .history-item .h-stats b{
     display:block;
     font-family:'Source Serif 4',serif;
-    font-size:1rem;
+    font-size:1.05rem;
     font-weight:700;
-    color:var(--ink);
   }
   .history-empty{
     text-align:center;
-    font-size:0.82rem;
+    font-size:0.84rem;
     color:var(--ink-soft);
-    margin-top:2.4rem;
+    margin-top:1.5rem;
+  }
+  .history-empty .big{ display:block; font-size:2.4rem; margin-bottom:0.4rem; animation:corebeat 1.6s ease-in-out infinite; }
+
+  /* ---- guided breathing overlay ---- */
+  .breathe{
+    position:absolute;
+    inset:0;
+    z-index:40;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:space-between;
+    padding:calc(1rem + env(safe-area-inset-top)) 1.2rem calc(1.6rem + env(safe-area-inset-bottom));
+    color:#fff;
+    background:
+      radial-gradient(80% 50% at 50% 40%, rgba(47,125,114,0.55) 0%, transparent 70%),
+      linear-gradient(170deg,#173A36 0%,#0E2422 100%);
+    opacity:0;
+    transition:opacity 0.35s ease;
+  }
+  .breathe.is-open{ opacity:1; }
+  .breathe[hidden]{ display:none; }
+  .breathe-top{ width:100%; display:flex; justify-content:space-between; align-items:center; }
+  .breathe-top span{ font-size:0.72rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; opacity:0.75; }
+  .breathe-close{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:999px;
+    color:#fff;
+    font-size:0.76rem;
+    font-weight:600;
+    padding:0.35rem 0.8rem;
+    cursor:pointer;
+  }
+  .breathe-stage{
+    position:relative;
+    width:250px;height:250px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .breathe-halo{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,0.18);
+  }
+  .breathe-orb{
+    width:250px;height:250px;
+    border-radius:50%;
+    background:radial-gradient(circle at 38% 32%, #9FD8CE 0%, #4FA295 45%, #2F7D72 100%);
+    box-shadow:0 0 60px rgba(111,190,176,0.45);
+    transform:scale(0.45);
+    transition:transform 5s cubic-bezier(.45,0,.55,1);
+  }
+  .breathe-orb.is-in{ transform:scale(1); }
+  .breathe-word{
+    position:absolute;
+    font-family:'Source Serif 4',serif;
+    font-size:1.5rem;
+    font-weight:700;
+    text-shadow:0 2px 10px rgba(0,0,0,0.25);
+  }
+  .breathe-copy{ text-align:center; max-width:18rem; }
+  .breathe-copy p{ margin:0; font-size:0.86rem; opacity:0.85; }
+  .breathe-dots{ display:flex; gap:6px; justify-content:center; margin-top:0.8rem; }
+  .breathe-dots i{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,0.22); transition:background 0.3s ease, transform 0.3s ease; }
+  .breathe-dots i.on{ background:#9FD8CE; transform:scale(1.2); }
+  .breathe-done{ display:flex; flex-direction:column; gap:0.6rem; width:100%; max-width:320px; }
+  .breathe-done[hidden]{ display:none; }
+  .breathe-done .new-reading-btn{ background:#fff; color:#173A36; box-shadow:none; }
+  .breathe-done .ghost-btn{ background:transparent; color:#fff; border-color:rgba(255,255,255,0.3); }
+
+  /* confetti burst (check-in milestones) */
+  .burst{
+    position:absolute;
+    width:8px;height:8px;
+    border-radius:2px;
+    pointer-events:none;
+    z-index:70;
+    animation:burst 0.9s cubic-bezier(.2,.7,.4,1) forwards;
+  }
+  @keyframes burst{
+    to{ transform:translate(var(--dx),var(--dy)) rotate(var(--rot)); opacity:0; }
   }
 
   /* ---- hidden dev tool: synthetic RR feed (not shown unless triggered) ---- */
@@ -636,39 +1233,8 @@
     .toast{ transition:none; }
   }
 
-  /* ---- "Read the science" link on the home screen ---- */
-  .science-link{
-    align-self:center;
-    display:inline-flex;
-    align-items:center;
-    gap:0.45rem;
-    margin-top:0.7rem;
-    padding:0.3rem 0.4rem;
-    background:none;
-    border:none;
-    color:var(--maroon);
-    font-size:0.8rem;
-    font-weight:600;
-    cursor:pointer;
-    touch-action:manipulation;
-  }
-  .science-link-pulse{
-    position:relative;
-    width:7px;height:7px;
-    border-radius:50%;
-    background:var(--gold);
-  }
-  .science-link-pulse::after{
-    content:"";
-    position:absolute;inset:0;
-    border-radius:50%;
-    background:var(--gold);
-    animation:btPulse 1.8s ease-out infinite;
-  }
-
   /* ---- loading screen: cycling cited fact ---- */
   .load-fact{
-    max-width:17rem;
     min-height:3.2em;
     margin:0;
     font-size:0.76rem;
@@ -681,29 +1247,22 @@
     display:block;
     margin-top:0.2rem;
     font-style:normal;
-    font-size:0.66rem;
+    font-size:0.64rem;
     font-weight:700;
-    letter-spacing:0.04em;
+    letter-spacing:0.05em;
     text-transform:uppercase;
     color:var(--gold);
   }
 
   /* ---- dashboard: citation chip + evidence card ---- */
-  .panel-head{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    margin-bottom:0.75rem;
-  }
-  .panel-head h2{ margin-bottom:0 !important; }
   .cite-chip{
-    background:var(--cream);
-    border:1px solid var(--gold);
-    border-radius:4px;
-    color:var(--maroon);
-    font-size:0.66rem;
+    background:var(--surface-2);
+    border:none;
+    border-radius:999px;
+    color:var(--brand);
+    font-size:0.64rem;
     font-weight:700;
-    padding:0.05rem 0.35rem;
+    padding:0.15rem 0.5rem;
     cursor:pointer;
     touch-action:manipulation;
   }
@@ -715,27 +1274,27 @@
     display:flex;
     align-items:center;
     gap:0.75rem;
-    background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);
-    color:var(--paper);
+    background:linear-gradient(140deg,#8E2639 0%,var(--brand-deep) 100%);
+    color:#fff;
     border:none;
-    border-radius:8px;
-    padding:0.75rem 0.9rem;
+    border-radius:var(--r);
+    padding:0.8rem 0.9rem;
     cursor:pointer;
     touch-action:manipulation;
-    animation:evidenceIn 0.6s cubic-bezier(.2,.7,.2,1) both;
+    box-shadow:var(--shadow);
   }
   .evidence-card::before{               /* slow sheen across the card */
     content:"";
     position:absolute;
     top:0;bottom:0;left:-60%;
     width:40%;
-    background:linear-gradient(90deg,transparent,rgba(228,201,137,0.22),transparent);
+    background:linear-gradient(90deg,transparent,rgba(235,217,174,0.22),transparent);
     transform:skewX(-20deg);
     animation:sheen 4.5s ease-in-out 0.8s infinite;
   }
   .evidence-card .ev-num{
     flex:0 0 auto;
-    width:30px;height:30px;
+    width:32px;height:32px;
     border-radius:50%;
     border:1.5px solid var(--gold);
     color:var(--gold-soft);
@@ -747,19 +1306,15 @@
   .evidence-card .ev-body{ flex:1; min-width:0; }
   .evidence-card .ev-label{
     display:block;
-    font-size:0.62rem;
+    font-size:0.6rem;
     font-weight:700;
     letter-spacing:0.08em;
     text-transform:uppercase;
     color:var(--gold-soft);
   }
   .evidence-card .ev-text{ display:block; font-size:0.82rem; line-height:1.4; margin-top:0.15rem; }
-  .evidence-card .ev-arrow{ flex:0 0 auto; color:var(--gold-soft); font-size:1rem; }
-  .evidence-card:active{ filter:brightness(1.1); }
-  @keyframes evidenceIn{
-    from{ opacity:0; transform:translateY(10px); }
-    to{ opacity:1; transform:none; }
-  }
+  .evidence-card .ev-arrow{ flex:0 0 auto; color:var(--gold-soft); font-size:1rem; transition:transform 0.2s ease; }
+  .evidence-card:active .ev-arrow{ transform:translateX(4px); }
   @keyframes sheen{
     0%{ left:-60%; }
     55%,100%{ left:130%; }
@@ -855,6 +1410,7 @@
 
   .ref-card{
     --accent:var(--maroon);
+    scroll-margin-top:68px;
     position:relative;
     background:var(--paper);
     border:1px solid var(--line);
@@ -1106,6 +1662,17 @@
     .axis-pulse{ display:none; }
     .load-fact{ transition:none; }
   }
+
+  /* ---- reduced motion: keep every state, drop the movement ---- */
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:0.01ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:0.01ms !important;
+    }
+    .breathe-orb{ transition:none !important; }
+    .axis-pulse{ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -1117,27 +1684,52 @@
   <!-- SCREEN 1: mood selection -->
   <section id="screen-select" class="screen active">
     <div class="topbar">
-      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <span class="brand"><span class="brand-mark" aria-hidden="true">&#10084;</span>Heart&ndash;Brain Mood Board</span>
       <div class="topbar-right">
         <span class="bt-dot" id="btDot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
-        <button class="back-btn" id="scienceBtn">Science</button>
         <button class="back-btn" id="historyBtn">History</button>
       </div>
     </div>
-    <div class="content">
-      <h1>How are you feeling right now?</h1>
-      <p class="sub">Tap a mood to log it.</p>
-      <div class="mood-grid" id="moodGrid"></div>
-      <button class="pair-btn" id="pairBtn" type="button">
-        <span class="pair-dot"></span>
-        <span id="pairBtnLabel">Pair my watch</span>
-      </button>
+    <div class="content stagger">
+      <div class="greet">
+        <span class="greet-hello"><span class="wave" aria-hidden="true">&#128075;</span><span id="greetText">Hello</span></span>
+        <h1>How is your <em>heart</em> feeling right now?</h1>
+        <p class="prompt" id="promptText">Take a breath, then tap whatever fits best.</p>
+      </div>
+
+      <div class="card streak-strip" id="streakStrip">
+        <span class="streak-flame" aria-hidden="true">&#128293;</span>
+        <div class="streak-text"><b id="streakTitle"></b><span id="streakSub"></span></div>
+        <div class="streak-dots" id="streakDots" aria-hidden="true"></div>
+      </div>
+
+      <p class="eyebrow mood-section-label">Pleasant</p>
+      <div class="mood-grid" id="moodGridCoherent"></div>
+      <p class="eyebrow mood-section-label">Difficult</p>
+      <div class="mood-grid" id="moodGridIncoherent"></div>
+
+      <div class="action-row">
+        <button class="card action-tile pair-btn" id="pairBtn" type="button">
+          <span class="action-icon" aria-hidden="true">&#8986;<span class="pair-dot"></span></span>
+          <span class="action-text"><b id="pairBtnLabel">Pair my watch</b><span>Live heart data</span></span>
+        </button>
+        <button class="card action-tile" id="scienceLink" type="button">
+          <span class="action-icon" aria-hidden="true">&#128300;</span>
+          <span class="action-text"><b>The science</b><span>4 references</span></span>
+        </button>
+      </div>
       <p class="pair-msg" id="pairMsg" role="status" aria-live="polite" hidden></p>
-      <button class="science-link" id="scienceLink" type="button">
-        <span class="science-link-pulse" aria-hidden="true"></span>
-        Read the science behind this <span aria-hidden="true">&rarr;</span>
+
+      <button class="card insight-card" id="insightCard" type="button">
+        <span class="insight-icon" aria-hidden="true">&#128161;</span>
+        <span class="insight-body">
+          <span class="eyebrow">Did you know?</span>
+          <span class="insight-text" id="insightText"></span>
+          <span class="insight-src" id="insightSrc"></span>
+        </span>
       </button>
-      <p class="select-footnote">Demo — physiological readout is simulated, not measured</p>
+
+      <p class="select-footnote">Demo &mdash; physiological readout is simulated unless a watch is paired</p>
     </div>
   </section>
 
@@ -1147,9 +1739,16 @@
       <div class="pulse-wrap">
         <div class="pulse-ring"></div>
         <div class="pulse-ring d2"></div>
-        <div class="pulse-core">&#10084;</div>
+        <div class="pulse-ring d3"></div>
+        <div class="pulse-core" id="loadEmoji">&#10084;</div>
       </div>
-      <p id="loadingStatus">Reading HRV signal&hellip;</p>
+      <h2 class="loading-title" id="loadingTitle">Listening to your heart&hellip;</h2>
+      <p id="loadingStatus"></p>
+      <ul class="steps card" id="loadSteps">
+        <li class="step"><span class="step-icon"></span>Reading HRV signal</li>
+        <li class="step"><span class="step-icon"></span>Filtering motion artefact</li>
+        <li class="step"><span class="step-icon"></span>Cross-referencing your mood</li>
+      </ul>
       <div class="load-bar"><div class="load-bar-fill"></div></div>
       <p class="load-fact" id="loadFact" aria-live="polite"></p>
     </div>
@@ -1158,44 +1757,85 @@
   <!-- SCREEN 3: dashboard -->
   <section id="screen-dashboard" class="screen">
     <div class="topbar">
-      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <span class="brand"><span class="brand-mark" aria-hidden="true">&#10084;</span>Heart&ndash;Brain Mood Board</span>
       <div class="topbar-right">
         <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
-        <button class="back-btn" id="backBtn">New reading</button>
+        <button class="back-btn" id="backBtn">Home</button>
       </div>
     </div>
-    <div class="content">
-      <div class="mood-chip" id="dashMoodChip"></div>
-      <canvas id="rhythmCanvas" width="600" height="120"></canvas>
-      <div class="stat-pair">
-        <div class="stat-card">
-          <span class="stat-value" id="coherenceValue">&mdash;</span>
-          <span class="stat-label">Coherence index<span class="src-tag" id="coherenceSource"></span></span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-value" id="hrValue">&mdash;</span>
-          <span class="stat-label">Residual HR</span>
+    <div class="content" id="dashContent">
+      <div class="result-hero" id="resultHero">
+        <div class="mood-chip" id="dashMoodChip"></div>
+        <div class="hero-stats">
+          <div class="ring">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <circle class="ring-track" cx="50" cy="50" r="40"/>
+              <circle class="ring-val" id="ringVal" cx="50" cy="50" r="40"/>
+            </svg>
+            <div class="ring-center">
+              <span class="stat-value" id="coherenceValue">&mdash;</span>
+              <small>coherence</small>
+            </div>
+          </div>
+          <div class="hero-side">
+            <span class="verdict" id="verdict"></span>
+            <div class="hero-metric">
+              <span class="stat-value" id="hrValue">&mdash;</span>
+              <span class="stat-label">Residual heart rate<span class="src-tag" id="coherenceSource"></span></span>
+            </div>
+          </div>
         </div>
       </div>
+
       <p class="pattern-badge" id="patternBadge" hidden></p>
-      <div class="modulator-panel">
+
+      <div class="card panel">
+        <div class="panel-head">
+          <h2>Heart rhythm</h2>
+          <span class="legend"><span><i style="background:var(--coherent)"></i>coherent</span><span><i style="background:var(--incoherent)"></i>erratic</span></span>
+        </div>
+        <canvas id="rhythmCanvas" width="600" height="110"></canvas>
+      </div>
+
+      <div class="card checkin">
+        <p class="checkin-q">Does this reading match how you feel?</p>
+        <div class="checkin-opts" id="checkinOpts">
+          <button class="checkin-opt" type="button" data-fb="yes">&#128077; Spot on</button>
+          <button class="checkin-opt" type="button" data-fb="partly">&#129300; Partly</button>
+          <button class="checkin-opt" type="button" data-fb="no">&#128078; Not really</button>
+        </div>
+        <p class="checkin-thanks" id="checkinThanks" hidden></p>
+      </div>
+
+      <button class="card try-card" id="tryCard" type="button">
+        <span class="try-orb" aria-hidden="true"></span>
+        <span class="try-text"><small>Try this &middot; 1 minute</small><b id="tryTitle"></b><span id="trySub"></span></span>
+        <span class="try-go" aria-hidden="true">&#9654;</span>
+      </button>
+
+      <div class="card panel modulator-panel">
         <div class="panel-head">
           <h2>Biochemical modulators</h2>
-          <button class="cite-chip" type="button" data-ref="norwest" aria-label="Source: Norwest Chiropractic, heart and brain connection">[3]</button>
+          <button class="cite-chip" type="button" data-ref="norwest" aria-label="Source: Norwest Chiropractic, heart and brain connection">Source [3]</button>
         </div>
         <div id="hormoneList"></div>
       </div>
-      <div class="note-card" id="noteCard"></div>
+
+      <div class="card note-card"><span id="noteCard"></span></div>
       <button class="evidence-card" id="evidenceCard" type="button"></button>
-      <button class="new-reading-btn" id="newReadingBtn">Log another mood</button>
-      <p class="demo-disclaimer">Rhythm, coherence, HR and modulator levels are computed from the selected mood category for demo purposes — not measured from a wearable device.</p>
+
+      <div class="btn-row">
+        <button class="ghost-btn" id="dashHistoryBtn" type="button">My journey</button>
+        <button class="new-reading-btn" id="newReadingBtn" type="button">Log another mood</button>
+      </div>
+      <p class="demo-disclaimer">Without a paired watch, rhythm, coherence, HR and modulator levels are simulated from the selected mood for demo purposes.</p>
     </div>
   </section>
 
   <!-- SCREEN 4: history -->
   <section id="screen-history" class="screen">
     <div class="topbar">
-      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <span class="brand"><span class="brand-mark" aria-hidden="true">&#10084;</span>Heart&ndash;Brain Mood Board</span>
       <div class="topbar-right">
         <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
         <button class="back-btn" id="historyBackBtn">Done</button>
@@ -1203,18 +1843,19 @@
     </div>
     <div class="content">
       <div class="history-head">
-        <h2>Mood history</h2>
+        <h2>Your journey</h2>
         <button class="clear-btn" id="clearHistoryBtn">Clear</button>
       </div>
+      <div class="card summary" id="historySummary"></div>
       <div id="historyList"></div>
-      <p class="history-empty" id="historyEmpty">No moods logged yet. Log one from the home screen and it will appear here.</p>
+      <p class="history-empty" id="historyEmpty"><span class="big" aria-hidden="true">&#128151;</span>No check-ins yet.<br>Log your first mood and your journey starts here.</p>
     </div>
   </section>
 
   <!-- SCREEN 5: the science (references) -->
   <section id="screen-research" class="screen">
     <div class="topbar">
-      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <span class="brand"><span class="brand-mark" aria-hidden="true">&#10084;</span>Heart&ndash;Brain Mood Board</span>
       <div class="topbar-right">
         <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
         <button class="back-btn" id="researchBackBtn">Done</button>
@@ -1358,6 +1999,27 @@
     </div>
   </section>
 
+
+  <!-- Guided coherent-breathing overlay -->
+  <div class="breathe" id="breathe" role="dialog" aria-modal="true" aria-label="Guided breathing" hidden>
+    <div class="breathe-top">
+      <span>Coherent breathing</span>
+      <button class="breathe-close" id="breatheClose" type="button">Close</button>
+    </div>
+    <div class="breathe-stage">
+      <div class="breathe-halo"></div>
+      <div class="breathe-orb" id="breatheOrb"></div>
+      <span class="breathe-word" id="breatheWord" aria-live="polite">Ready</span>
+    </div>
+    <div class="breathe-copy">
+      <p id="breatheCopy">In for 5, out for 5. About six slow breaths a minute is known to raise heart-rate variability.</p>
+      <div class="breathe-dots" id="breatheDots"></div>
+      <div class="breathe-done" id="breatheDone" hidden>
+        <button class="new-reading-btn" id="breatheLog" type="button">Log how I feel now</button>
+        <button class="ghost-btn" id="breatheBack" type="button">Back to my reading</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1366,20 +2028,25 @@
   // hormones are shown for every mood so the bars can be read side by side;
   // `primary` flags the one(s) the poster's Table 1 calls the main driver.
   const HORMONES = [
-    {key:'oxytocin',    name:'Oxytocin',    color:'#2F6F6B'},
-    {key:'serotonin',   name:'Serotonin',   color:'#4E8A5B'},
-    {key:'cortisol',    name:'Cortisol',    color:'#C0762E'},
-    {key:'epinephrine', name:'Epinephrine', color:'#B23A2E'}
+    {key:'oxytocin',    name:'Oxytocin',    color:'#2F7D72'},
+    {key:'serotonin',   name:'Serotonin',   color:'#5C9A62'},
+    {key:'cortisol',    name:'Cortisol',    color:'#D08A3A'},
+    {key:'epinephrine', name:'Epinephrine', color:'#C9503A'}
   ];
 
+  // `color`/`tint` give each mood its own accent across the app.
   const MOODS = [
-    {key:'calm',        label:'Calm',        emoji:'\u{1F9D8}', group:'coherent',   coherenceRange:[82,92], hrRange:[61,67], primary:['oxytocin'],                hormones:{oxytocin:78, serotonin:64, cortisol:20, epinephrine:14}, note:'Vagal tone rises — the waveform reads smooth and coherent, in line with the calm/gratitude/compassion pattern in the poster.'},
-    {key:'gratitude',   label:'Gratitude',   emoji:'\u{1F64F}', group:'coherent',   coherenceRange:[80,90], hrRange:[63,69], primary:['oxytocin','serotonin'],    hormones:{oxytocin:70, serotonin:74, cortisol:24, epinephrine:18}, note:'Positive affect and reward signalling — stable rhythm, efficient recovery after any prior stressor.'},
-    {key:'compassion',  label:'Compassion',  emoji:'\u{1F49D}', group:'coherent',   coherenceRange:[78,88], hrRange:[64,70], primary:['oxytocin'],                hormones:{oxytocin:82, serotonin:56, cortisol:27, epinephrine:21}, note:'Social bonding response — vagal tone up, low-jitter waveform.'},
-    {key:'frustration', label:'Frustration', emoji:'\u{1F624}', group:'incoherent', coherenceRange:[22,34], hrRange:[82,91], primary:['cortisol'],                hormones:{oxytocin:24, serotonin:31, cortisol:76, epinephrine:54}, note:'Sustained psychogenic stress — rhythm reshaped, coherence index drops sharply.'},
-    {key:'anxiety',     label:'Anxiety',     emoji:'\u{1F630}', group:'incoherent', coherenceRange:[16,28], hrRange:[86,96], primary:['cortisol','epinephrine'],  hormones:{oxytocin:18, serotonin:24, cortisol:82, epinephrine:79}, note:'Sympathetic arousal — erratic, high-frequency rhythm, matching the incoherent pattern in the poster.'},
-    {key:'anger',       label:'Anger',       emoji:'\u{1F620}', group:'incoherent', coherenceRange:[12,24], hrRange:[90,100],primary:['epinephrine'],             hormones:{oxytocin:15, serotonin:21, cortisol:63, epinephrine:89}, note:'Acute fight-or-flight signalling — rate and force rise, rhythm turns erratic.'}
+    {key:'calm',        label:'Calm',        desc:'at ease',   emoji:'\u{1F9D8}', color:'#2F7D72', tint:'#E3F1EE', group:'coherent',   coherenceRange:[82,92], hrRange:[61,67], primary:['oxytocin'],                hormones:{oxytocin:78, serotonin:64, cortisol:20, epinephrine:14}, note:'Vagal tone rises — the waveform reads smooth and coherent, in line with the calm/gratitude/compassion pattern in the poster.'},
+    {key:'gratitude',   label:'Gratitude',   desc:'thankful',  emoji:'\u{1F64F}', color:'#B7862C', tint:'#FBF1DC', group:'coherent',   coherenceRange:[80,90], hrRange:[63,69], primary:['oxytocin','serotonin'],    hormones:{oxytocin:70, serotonin:74, cortisol:24, epinephrine:18}, note:'Positive affect and reward signalling — stable rhythm, efficient recovery after any prior stressor.'},
+    {key:'compassion',  label:'Compassion',  desc:'caring',    emoji:'\u{1F49D}', color:'#BE4F72', tint:'#FBE7EE', group:'coherent',   coherenceRange:[78,88], hrRange:[64,70], primary:['oxytocin'],                hormones:{oxytocin:82, serotonin:56, cortisol:27, epinephrine:21}, note:'Social bonding response — vagal tone up, low-jitter waveform.'},
+    {key:'frustration', label:'Frustration', desc:'blocked',   emoji:'\u{1F624}', color:'#C9702E', tint:'#FCEBDD', group:'incoherent', coherenceRange:[22,34], hrRange:[82,91], primary:['cortisol'],                hormones:{oxytocin:24, serotonin:31, cortisol:76, epinephrine:54}, note:'Sustained psychogenic stress — rhythm reshaped, coherence index drops sharply.'},
+    {key:'anxiety',     label:'Anxiety',     desc:'on edge',   emoji:'\u{1F630}', color:'#6E58A8', tint:'#EEEAF7', group:'incoherent', coherenceRange:[16,28], hrRange:[86,96], primary:['cortisol','epinephrine'],  hormones:{oxytocin:18, serotonin:24, cortisol:82, epinephrine:79}, note:'Sympathetic arousal — erratic, high-frequency rhythm, matching the incoherent pattern in the poster.'},
+    {key:'anger',       label:'Anger',       desc:'heated',    emoji:'\u{1F620}', color:'#B8352B', tint:'#FBE5E2', group:'incoherent', coherenceRange:[12,24], hrRange:[90,100],primary:['epinephrine'],             hormones:{oxytocin:15, serotonin:21, cortisol:63, epinephrine:89}, note:'Acute fight-or-flight signalling — rate and force rise, rhythm turns erratic.'}
   ];
+  const MOOD_BY_KEY = {};
+  MOODS.forEach(function(m){ MOOD_BY_KEY[m.key] = m; });
+  function moodColor(key){ return (MOOD_BY_KEY[key] || {}).color || '#7A1F2E'; }
+  function moodTint(key){ return (MOOD_BY_KEY[key] || {}).tint || '#F7E9EA'; }
 
   const screens = {
     select: document.getElementById('screen-select'),
@@ -1395,10 +2062,12 @@
     const current = Object.values(screens).find(function(s){ return s.classList.contains('active'); });
     if(current === next) return;
     clearTimeout(screenAnimTimer);
+    if(name === 'select') onHomeShown();
 
     if(!animate || !current || reduceMotion){
       Object.values(screens).forEach(function(s){ s.classList.remove('active','fade-out','fade-in'); });
       next.classList.add('active');
+      next.scrollTop = name === 'research' ? next.scrollTop : 0;
       return;
     }
 
@@ -1407,10 +2076,20 @@
     screenAnimTimer = setTimeout(function(){
       Object.values(screens).forEach(function(s){ s.classList.remove('active','fade-out','fade-in'); });
       next.classList.add('active','fade-in');
+      if(name !== 'research') next.scrollTop = 0;
       void next.offsetWidth;              // flush styles so the fade-in transitions
       next.classList.remove('fade-in');
     }, 280);
   }
+
+  // Replays the staggered entrance on a container's children.
+  function restagger(el){
+    el.classList.remove('stagger');
+    void el.offsetWidth;
+    el.classList.add('stagger');
+  }
+
+  function buzz(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms || 12); }catch(_){} }
 
   function rand(min,max){ return Math.round(min + Math.random()*(max-min)); }
   function hormoneLabel(v){
@@ -1422,7 +2101,7 @@
   }
   function coherenceColor(c){
     const t = c/100;
-    const from=[178,58,46], to=[47,111,107];
+    const from=[201,80,58], to=[47,125,114];
     const r=Math.round(from[0]+(to[0]-from[0])*t);
     const g=Math.round(from[1]+(to[1]-from[1])*t);
     const b=Math.round(from[2]+(to[2]-from[2])*t);
@@ -1445,13 +2124,15 @@
     try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, HISTORY_MAX))); }catch(e){}
   }
   function addHistoryEntry(r){
-    history.unshift({
+    const entry = {
       key:r.key, label:r.label, emoji:r.emoji, group:r.group,
       coherence:r.coherence, hr:r.hr, primary:r.primary,
       hormones:r.hormones, note:r.note, source:r.source || 'simulated', ts:Date.now()
-    });
+    };
+    history.unshift(entry);
     history = history.slice(0, HISTORY_MAX);
     saveHistory();
+    return entry;
   }
   function formatTime(ts){
     const d = new Date(ts), now = new Date();
@@ -1462,46 +2143,137 @@
     return d.toLocaleDateString([], {month:'short', day:'numeric'}) + ' ' + time;
   }
 
-  const historyList = document.getElementById('historyList');
-  const historyEmpty = document.getElementById('historyEmpty');
-  function renderHistory(){
-    historyList.innerHTML = '';
-    historyEmpty.style.display = history.length ? 'none' : 'block';
-    history.forEach(function(h){
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'history-item';
-      item.innerHTML =
-        '<span class="h-emoji">'+h.emoji+'</span>'+
-        '<span class="h-main">'+
-          '<span class="h-mood">'+h.label+'</span>'+
-          '<span class="h-time">'+formatTime(h.ts)+'</span>'+
-        '</span>'+
-        '<span class="h-stats"><b>'+h.coherence+'</b>coherence · '+h.hr+' bpm</span>';
-      item.addEventListener('click', function(){
-        currentReading = h;
-        renderDashboard(h);
-        showScreen('dashboard');
-      });
-      historyList.appendChild(item);
-    });
+  // ---- streak + daily stats (derived from history) ----
+  function dayKey(d){ return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+  function getStats(){
+    const days = {};
+    history.forEach(function(h){ days[dayKey(new Date(h.ts))] = true; });
+    const today = new Date();
+    let streak = 0;
+    const cursor = new Date(today);
+    if(!days[dayKey(cursor)]) cursor.setDate(cursor.getDate() - 1); // streak survives until today ends
+    while(days[dayKey(cursor)]){ streak++; cursor.setDate(cursor.getDate() - 1); }
+    const todayCount = history.filter(function(h){ return dayKey(new Date(h.ts)) === dayKey(today); }).length;
+    const week = [];
+    for(let i = 6; i >= 0; i--){
+      const d = new Date(today); d.setDate(today.getDate() - i);
+      week.push({on: !!days[dayKey(d)], today: i === 0});
+    }
+    return {streak:streak, todayCount:todayCount, week:week, total:history.length};
+  }
+
+  // ---- home screen: greeting, rotating prompt, streak, insight ----
+  const PROMPTS = [
+    'Take a breath, then tap whatever fits best.',
+    'There are no wrong answers — just notice.',
+    'Your heart has been talking. What is it saying?',
+    'One tap. Three seconds. A clearer picture.'
+  ];
+  let promptIdx = 0, promptTimer = null;
+  const promptText = document.getElementById('promptText');
+  function rotatePrompt(){
+    promptText.classList.add('is-hidden');
+    setTimeout(function(){
+      promptIdx = (promptIdx + 1) % PROMPTS.length;
+      promptText.textContent = PROMPTS[promptIdx];
+      promptText.classList.remove('is-hidden');
+    }, 350);
+  }
+
+  function renderGreeting(){
+    const h = new Date().getHours();
+    document.getElementById('greetText').textContent =
+      h < 5 ? 'Still up?' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  }
+
+  function renderStreak(){
+    const s = getStats();
+    const strip = document.getElementById('streakStrip');
+    const title = document.getElementById('streakTitle');
+    const sub = document.getElementById('streakSub');
+    strip.classList.toggle('is-active', s.streak > 0);
+    if(s.total === 0){
+      title.textContent = 'Start your streak today';
+      sub.textContent = 'Your first check-in takes three seconds.';
+    }else if(s.todayCount === 0){
+      title.textContent = s.streak + '-day streak — keep it alive';
+      sub.textContent = 'You haven’t checked in yet today.';
+    }else{
+      title.textContent = s.streak + '-day streak';
+      sub.textContent = s.todayCount + (s.todayCount === 1 ? ' check-in' : ' check-ins') + ' today · nice work';
+    }
+    document.getElementById('streakDots').innerHTML = s.week.map(function(d){
+      return '<i class="' + (d.on ? 'on' : '') + (d.today ? ' today' : '') + '"></i>';
+    }).join('');
+  }
+
+  function onHomeShown(){
+    renderGreeting();
+    renderStreak();
+    showInsight();
+    document.querySelectorAll('.mood-grid').forEach(function(g){ g.classList.remove('has-pick'); });
+    document.querySelectorAll('.mood-card.is-picked').forEach(function(c){ c.classList.remove('is-picked'); });
+    picking = false;
+    restagger(document.querySelector('#screen-select .content'));
   }
 
   // ---- build mood grid ----
-  const moodGrid = document.getElementById('moodGrid');
+  let picking = false;
+  const gridFor = {
+    coherent: document.getElementById('moodGridCoherent'),
+    incoherent: document.getElementById('moodGridIncoherent')
+  };
   MOODS.forEach(function(m){
     const card = document.createElement('button');
     card.className = 'mood-card';
     card.type = 'button';
-    card.innerHTML = '<span class="emoji">'+m.emoji+'</span><span class="label">'+m.label+'</span>';
-    card.addEventListener('click', function(){ selectMood(m); });
-    moodGrid.appendChild(card);
+    card.style.setProperty('--mc', m.color);
+    card.style.setProperty('--mc-tint', m.tint);
+    card.innerHTML =
+      '<span class="emoji-bubble">'+m.emoji+'</span>' +
+      '<span class="label">'+m.label+'</span>' +
+      '<span class="desc">'+m.desc+'</span>';
+    card.addEventListener('click', function(e){
+      if(picking) return;
+      picking = true;
+      buzz(15);
+      // ripple from the tap point
+      const rect = card.getBoundingClientRect();
+      const rp = document.createElement('span');
+      rp.className = 'ripple';
+      rp.style.left = ((e.clientX || rect.left + rect.width/2) - rect.left) + 'px';
+      rp.style.top = ((e.clientY || rect.top + rect.height/2) - rect.top) + 'px';
+      card.appendChild(rp);
+      setTimeout(function(){ rp.remove(); }, 650);
+      // spotlight the pick, then move on
+      Object.values(gridFor).forEach(function(g){ g.classList.add('has-pick'); });
+      card.classList.add('is-picked');
+      setTimeout(function(){ selectMood(m); }, reduceMotion ? 0 : 480);
+    });
+    gridFor[m.group].appendChild(card);
   });
 
-  // ---- loading status cycling ----
+  // ---- loading: step checklist ----
   const loadingStatus = document.getElementById('loadingStatus');
-  const statuses = ['Reading HRV signal\u2026','Filtering motion artefact\u2026','Cross-referencing mood-board entry\u2026'];
-  let statusTimer = null;
+  const loadSteps = Array.prototype.slice.call(document.querySelectorAll('#loadSteps .step'));
+  const loadingScreen = screens.loading;
+  let stepTimers = [];
+
+  function runSteps(){
+    stepTimers.forEach(clearTimeout);
+    stepTimers = [];
+    loadSteps.forEach(function(s){ s.className = 'step'; });
+    loadSteps.forEach(function(s, i){
+      stepTimers.push(setTimeout(function(){
+        if(i > 0) loadSteps[i-1].className = 'step is-done';
+        s.className = 'step is-active';
+        loadingStatus.textContent = s.textContent;
+      }, i * 950));
+    });
+    stepTimers.push(setTimeout(function(){
+      loadSteps[loadSteps.length-1].className = 'step is-done';
+    }, 2800));
+  }
 
   let currentReading = null;
   let animRunning = false;
@@ -1524,32 +2296,63 @@
     }
     currentReading = Object.assign({}, m, {coherence:coherence, hr:hr, source:source});
 
+    loadingScreen.style.setProperty('--pick', m.color);
+    document.getElementById('loadEmoji').textContent = m.emoji;
+    document.getElementById('loadingTitle').textContent = 'Listening to your heart…';
     showScreen('loading');
     showLoadFact();
-    let i = 0;
-    loadingStatus.textContent = statuses[0];
-    clearInterval(statusTimer);
-    statusTimer = setInterval(function(){
-      i = (i+1) % statuses.length;
-      loadingStatus.textContent = statuses[i];
-    }, 1000);
+    runSteps();
 
     setTimeout(function(){
-      clearInterval(statusTimer);
-      addHistoryEntry(currentReading);
-      renderDashboard(currentReading);
+      const entry = addHistoryEntry(currentReading);
+      currentReading = entry;
+      renderDashboard(entry, true);
       showScreen('dashboard');
+      celebrateIfMilestone();
     }, 3000);
   }
 
-  function renderDashboard(r){
-    document.getElementById('dashMoodChip').innerHTML = '<span class="emoji">'+r.emoji+'</span><span>'+r.label+'</span>';
-    document.getElementById('coherenceValue').textContent = r.coherence;
-    document.getElementById('coherenceValue').style.color = coherenceColor(r.coherence);
-    document.getElementById('hrValue').textContent = r.hr+' bpm';
+  // ---- dashboard ----
+  const RING_C = 2 * Math.PI * 40;
+  function animateNumber(el, to, suffix){
+    if(reduceMotion){ el.textContent = to + (suffix || ''); return; }
+    const start = performance.now(), dur = 1100;
+    (function tick(now){
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(to * eased) + (suffix || '');
+      if(t < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
+  function renderDashboard(r, fresh){
+    const color = moodColor(r.key);
+    const hero = document.getElementById('resultHero');
+    hero.style.setProperty('--mc', color);
+    document.getElementById('dashMoodChip').innerHTML =
+      '<span class="emoji">'+r.emoji+'</span>' +
+      '<span class="chip-text"><small>' + (fresh ? 'You’re feeling' : formatTime(r.ts)) + '</small><b>'+r.label+'</b></span>';
+
+    const cohEl = document.getElementById('coherenceValue');
+    animateNumber(cohEl, r.coherence);
+    animateNumber(document.getElementById('hrValue'), r.hr, ' bpm');
+    const ring = document.getElementById('ringVal');
+    ring.style.transition = 'none';
+    ring.style.strokeDashoffset = RING_C;
+    void ring.getBoundingClientRect();
+    ring.style.transition = '';
+    requestAnimationFrame(function(){
+      ring.style.strokeDashoffset = RING_C * (1 - r.coherence / 100);
+    });
+
+    const verdict = document.getElementById('verdict');
+    const coherent = r.coherence >= 50;
+    verdict.textContent = coherent ? '● Coherent rhythm' : '● Erratic rhythm';
+    verdict.style.color = color;
+
     const isLive = r.source === 'live';
     const srcEl = document.getElementById('coherenceSource');
-    srcEl.textContent = isLive ? '(live)' : '(simulated)';
+    srcEl.textContent = isLive ? '· live' : '· simulated';
     srcEl.className = 'src-tag ' + (isLive ? 'is-live' : 'is-sim');
 
     // Live-only observation: does the real coherence score land on the side
@@ -1558,8 +2361,7 @@
     const patternBadge = document.getElementById('patternBadge');
     if(isLive){
       const expectedCoherent = r.group === 'coherent';
-      const landedCoherent = r.coherence >= 50;
-      const matches = landedCoherent === expectedCoherent;
+      const matches = coherent === expectedCoherent;
       patternBadge.textContent = matches ? 'Matches expected pattern' : "Didn't match this time";
       patternBadge.className = 'pattern-badge' + (matches ? ' is-match' : '');
       patternBadge.hidden = false;
@@ -1567,9 +2369,13 @@
       patternBadge.hidden = true;
     }
 
+    renderCheckin(r);
+    renderTry(r);
     renderHormones(r);
     document.getElementById('noteCard').textContent = r.note;
     renderEvidence(r);
+    restagger(document.getElementById('dashContent'));
+
     targetCoherence = r.coherence;
     if(!animRunning){
       animRunning = true;
@@ -1577,10 +2383,47 @@
     }
   }
 
+  // "Does this match?" — the user's own read is the paper's "ground truth",
+  // so it's stored on the history entry alongside the reading.
+  const FEEDBACK = {
+    yes:    {icon:'\u{1F44D}', text:'Great — your felt sense and the signal agree.'},
+    partly: {icon:'\u{1F914}', text:'Thanks. Mixed feelings are common — try another check-in later.'},
+    no:     {icon:'\u{1F44E}', text:'Noted. Movement, caffeine or a recent climb can all skew a reading.'}
+  };
+  const checkinOpts = document.getElementById('checkinOpts');
+  const checkinThanks = document.getElementById('checkinThanks');
+  function renderCheckin(r){
+    checkinOpts.classList.toggle('is-answered', !!r.feedback);
+    checkinOpts.querySelectorAll('.checkin-opt').forEach(function(b){
+      b.classList.toggle('is-chosen', b.dataset.fb === r.feedback);
+    });
+    checkinThanks.hidden = !r.feedback;
+    checkinThanks.textContent = r.feedback ? FEEDBACK[r.feedback].text : '';
+  }
+  checkinOpts.querySelectorAll('.checkin-opt').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(!currentReading) return;
+      buzz(10);
+      currentReading.feedback = b.dataset.fb;
+      const idx = history.findIndex(function(h){ return h.ts === currentReading.ts; });
+      if(idx !== -1){ history[idx].feedback = b.dataset.fb; saveHistory(); }
+      renderCheckin(currentReading);
+      if(b.dataset.fb === 'yes') burst(b);
+    });
+  });
+
+  function renderTry(r){
+    const coherent = r.group === 'coherent';
+    document.getElementById('tryTitle').textContent = coherent ? 'Anchor this calm' : 'Reset your rhythm';
+    document.getElementById('trySub').textContent = coherent
+      ? 'Six slow breaths to hold this coherent state.'
+      : 'Six slow breaths to bring heart and brain back in sync.';
+  }
+
   const hormoneList = document.getElementById('hormoneList');
   function renderHormones(r){
     hormoneList.innerHTML = '';
-    HORMONES.forEach(function(H){
+    HORMONES.forEach(function(H, i){
       const v = Math.max(0, Math.min(100, r.hormones[H.key] || 0));
       const isPrimary = (r.primary || []).indexOf(H.key) !== -1;
       const row = document.createElement('div');
@@ -1592,7 +2435,7 @@
           '</span>' +
           '<span class="horm-level">' + hormoneLabel(v) + ' · ' + v + '</span>' +
         '</div>' +
-        '<div class="horm-track"><div class="horm-fill" style="background:' + H.color + '"></div></div>';
+        '<div class="horm-track"><div class="horm-fill" style="background:' + H.color + ';transition-delay:' + (0.25 + i * 0.1) + 's"></div></div>';
       hormoneList.appendChild(row);
       const fill = row.querySelector('.horm-fill');
       requestAnimationFrame(function(){
@@ -1609,33 +2452,241 @@
     coherenceAnim += (targetCoherence - coherenceAnim) * 0.05;
     const jitter = (100-coherenceAnim)/100;
     const color = coherenceColor(coherenceAnim);
-    ctx.beginPath();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
     const mid = h/2, amp = h*0.32;
+    const pts = [];
     for(let x=0; x<=w; x+=2){
       const freq = 0.045 + jitter*0.05;
       let y = mid + Math.sin((x*freq)+phase) * amp * (1-jitter*0.25);
       y += (Math.random()-0.5) * jitter * amp * 0.9;
-      if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      pts.push([x,y]);
     }
+    // soft fill under the trace
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0, color.replace('rgb','rgba').replace(')',',0.16)'));
+    grad.addColorStop(1, color.replace('rgb','rgba').replace(')',',0)'));
+    ctx.beginPath();
+    pts.forEach(function(p,i){ if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
+    ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.beginPath();
+    pts.forEach(function(p,i){ if(i===0) ctx.moveTo(p[0],p[1]); else ctx.lineTo(p[0],p[1]); });
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
     ctx.stroke();
     phase += 0.11;
     requestAnimationFrame(drawLoop);
   }
 
+  // ---- history: summary + list ----
+  const historyList = document.getElementById('historyList');
+  const historyEmpty = document.getElementById('historyEmpty');
+  const historySummary = document.getElementById('historySummary');
+  const FB_ICON = {yes:'\u{1F44D}', partly:'\u{1F914}', no:'\u{1F44E}'};
+
+  function renderSummary(){
+    if(!history.length){ historySummary.hidden = true; return; }
+    historySummary.hidden = false;
+    const s = getStats();
+    const avg = Math.round(history.reduce(function(a,h){ return a + h.coherence; }, 0) / history.length);
+
+    // sparkline of the last 14 readings, oldest on the left
+    const pts = history.slice(0, 14).reverse();
+    const W = 300, H = 70, pad = 6;
+    const step = pts.length > 1 ? (W - pad*2) / (pts.length - 1) : 0;
+    const xy = pts.map(function(h, i){
+      return [pts.length > 1 ? pad + i*step : W/2, H - pad - (h.coherence/100) * (H - pad*2)];
+    });
+    const line = xy.map(function(p,i){ return (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' ');
+    const area = line + ' L' + xy[xy.length-1][0].toFixed(1) + ' ' + H + ' L' + xy[0][0].toFixed(1) + ' ' + H + ' Z';
+    const dots = xy.map(function(p,i){
+      return '<circle class="spark-dot" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4" fill="'+moodColor(pts[i].key)+'" stroke="#fff" stroke-width="1.5" style="animation-delay:'+(0.3 + i*0.06)+'s"/>';
+    }).join('');
+    const midY = H - pad - 0.5 * (H - pad*2);
+
+    // mood mix
+    const counts = {};
+    history.forEach(function(h){ counts[h.key] = (counts[h.key] || 0) + 1; });
+    const keys = MOODS.map(function(m){ return m.key; }).filter(function(k){ return counts[k]; });
+    const mix = keys.map(function(k, i){
+      return '<span style="width:'+(counts[k]/history.length*100)+'%;background:'+moodColor(k)+';animation-delay:'+(i*0.08)+'s"></span>';
+    }).join('');
+    const key = keys.map(function(k){
+      return '<span><i style="background:'+moodColor(k)+'"></i>'+MOOD_BY_KEY[k].label+' '+counts[k]+'</span>';
+    }).join('');
+
+    historySummary.innerHTML =
+      '<div class="summary-stats">' +
+        '<div><b>'+s.total+'</b><span>check-ins</span></div>' +
+        '<div><b>'+s.streak+'</b><span>day streak</span></div>' +
+        '<div><b style="color:'+coherenceColor(avg)+'">'+avg+'</b><span>avg coherence</span></div>' +
+      '</div>' +
+      '<div class="spark-wrap">' +
+        '<p class="eyebrow">Coherence over time</p>' +
+        '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-label="Coherence of your recent check-ins">' +
+          '<defs><linearGradient id="sparkFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7A1F2E" stop-opacity="0.16"/><stop offset="1" stop-color="#7A1F2E" stop-opacity="0"/></linearGradient></defs>' +
+          '<line class="spark-mid" x1="0" x2="'+W+'" y1="'+midY+'" y2="'+midY+'"/>' +
+          (pts.length > 1 ? '<path class="spark-area" d="'+area+'"/><path class="spark-line" d="'+line+'"/>' : '') +
+          dots +
+        '</svg>' +
+        '<div class="spark-cap"><span>older</span><span>50 = midpoint</span><span>latest</span></div>' +
+      '</div>' +
+      '<div class="mix-bar">'+mix+'</div>' +
+      '<div class="mix-key">'+key+'</div>';
+  }
+
+  function renderHistory(){
+    historyList.innerHTML = '';
+    historyEmpty.style.display = history.length ? 'none' : 'block';
+    renderSummary();
+    history.forEach(function(h, i){
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'history-item';
+      item.style.setProperty('--mc-tint', moodTint(h.key));
+      item.style.animationDelay = Math.min(i, 10) * 0.04 + 's';
+      item.innerHTML =
+        '<span class="h-emoji">'+h.emoji+'</span>'+
+        '<span class="h-main">'+
+          '<span class="h-mood">'+h.label+(h.feedback ? '<span class="h-fb">'+FB_ICON[h.feedback]+'</span>' : '')+'</span>'+
+          '<span class="h-time">'+formatTime(h.ts)+'</span>'+
+        '</span>'+
+        '<span class="h-stats"><b style="color:'+coherenceColor(h.coherence)+'">'+h.coherence+'</b>'+h.hr+' bpm</span>';
+      item.addEventListener('click', function(){
+        currentReading = h;
+        renderDashboard(h, false);
+        showScreen('dashboard', true);
+      });
+      historyList.appendChild(item);
+    });
+  }
+
+  // ---- little celebrations ----
+  function burst(anchor){
+    if(reduceMotion) return;
+    const app = document.getElementById('app');
+    const a = anchor.getBoundingClientRect(), b = app.getBoundingClientRect();
+    const cx = a.left - b.left + a.width/2, cy = a.top - b.top + a.height/2;
+    const colors = ['#C29A45','#7A1F2E','#2F7D72','#BE4F72','#EBD9AE'];
+    for(let i = 0; i < 18; i++){
+      const p = document.createElement('span');
+      p.className = 'burst';
+      const ang = Math.random() * Math.PI * 2, dist = 40 + Math.random() * 60;
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.background = colors[i % colors.length];
+      p.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      p.style.setProperty('--dy', Math.sin(ang) * dist - 20 + 'px');
+      p.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+      app.appendChild(p);
+      setTimeout(function(){ p.remove(); }, 950);
+    }
+  }
+  function celebrateIfMilestone(){
+    const s = getStats();
+    let msg = null;
+    if(s.total === 1) msg = 'First check-in logged — welcome!';
+    else if(s.todayCount === 1 && s.streak > 1) msg = s.streak + '-day streak! Your heart thanks you.';
+    else if(s.total % 10 === 0) msg = s.total + ' check-ins — you’re building real self-awareness.';
+    if(msg){
+      setTimeout(function(){
+        showToast(msg, 3200);
+        burst(document.getElementById('resultHero'));
+      }, 450);
+    }
+  }
+
+  // ---- navigation ----
   document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select', true); });
   document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select', true); });
-
-  document.getElementById('historyBtn').addEventListener('click', function(){
+  function openHistory(){
     renderHistory();
-    showScreen('history');
-  });
+    showScreen('history', true);
+  }
+  document.getElementById('historyBtn').addEventListener('click', openHistory);
+  document.getElementById('dashHistoryBtn').addEventListener('click', openHistory);
   document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select', true); });
-  document.getElementById('clearHistoryBtn').addEventListener('click', function(){
+
+  // Two-tap clear so a stray tap can't wipe the journey.
+  const clearBtn = document.getElementById('clearHistoryBtn');
+  let clearArmed = null;
+  clearBtn.addEventListener('click', function(){
+    if(!clearArmed){
+      clearBtn.textContent = 'Tap to confirm';
+      clearBtn.classList.add('is-confirm');
+      clearArmed = setTimeout(function(){
+        clearArmed = null;
+        clearBtn.textContent = 'Clear';
+        clearBtn.classList.remove('is-confirm');
+      }, 2500);
+      return;
+    }
+    clearTimeout(clearArmed);
+    clearArmed = null;
+    clearBtn.textContent = 'Clear';
+    clearBtn.classList.remove('is-confirm');
     history = [];
     saveHistory();
     renderHistory();
+  });
+
+  // ---- guided coherent breathing (5s in / 5s out × 6 = one minute) ----
+  const breathe = document.getElementById('breathe');
+  const breatheOrb = document.getElementById('breatheOrb');
+  const breatheWord = document.getElementById('breatheWord');
+  const breatheDots = document.getElementById('breatheDots');
+  const breatheDone = document.getElementById('breatheDone');
+  const breatheCopy = document.getElementById('breatheCopy');
+  const BREATHS = 6, HALF = 5000;
+  let breatheTimers = [];
+
+  function stopBreathing(){
+    breatheTimers.forEach(clearTimeout);
+    breatheTimers = [];
+  }
+  function openBreathing(){
+    stopBreathing();
+    breatheDots.innerHTML = new Array(BREATHS + 1).join('<i></i>');
+    const dots = breatheDots.querySelectorAll('i');
+    breatheDone.hidden = true;
+    breatheCopy.hidden = false;
+    breatheOrb.classList.remove('is-in');
+    breatheWord.textContent = 'Get comfortable';
+    breathe.hidden = false;
+    requestAnimationFrame(function(){ breathe.classList.add('is-open'); });
+
+    const t0 = 1600;
+    for(let i = 0; i < BREATHS; i++){
+      breatheTimers.push(setTimeout(function(){
+        breatheOrb.classList.add('is-in');
+        breatheWord.textContent = 'Breathe in';
+        dots[i].classList.add('on');
+        buzz(20);
+      }, t0 + i * HALF * 2));
+      breatheTimers.push(setTimeout(function(){
+        breatheOrb.classList.remove('is-in');
+        breatheWord.textContent = 'Breathe out';
+      }, t0 + i * HALF * 2 + HALF));
+    }
+    breatheTimers.push(setTimeout(function(){
+      breatheWord.textContent = 'Well done';
+      breatheCopy.hidden = true;
+      breatheDone.hidden = false;
+      buzz([20, 60, 20]);
+    }, t0 + BREATHS * HALF * 2));
+  }
+  function closeBreathing(){
+    stopBreathing();
+    breathe.classList.remove('is-open');
+    setTimeout(function(){ breathe.hidden = true; }, 350);
+  }
+  document.getElementById('tryCard').addEventListener('click', openBreathing);
+  document.getElementById('breatheClose').addEventListener('click', closeBreathing);
+  document.getElementById('breatheBack').addEventListener('click', closeBreathing);
+  document.getElementById('breatheLog').addEventListener('click', function(){
+    closeBreathing();
+    showScreen('select', true);
   });
 
   // ---- Bluetooth watch pairing (Web Bluetooth — Heart Rate service) ----
@@ -1670,7 +2721,7 @@
       d.setAttribute('title', 'Watch: ' + meta.hint);
       d.setAttribute('aria-label', 'Watch status: ' + meta.hint);
     });
-    pairBtn.className = 'pair-btn ' + meta.cls;
+    pairBtn.className = 'card action-tile pair-btn ' + meta.cls;
     pairBtn.disabled = (state === 'connecting');
     pairBtnLabel.textContent = meta.label;
   }
@@ -2134,6 +3185,23 @@
     loadFactTimer = setTimeout(function(){ loadFact.classList.remove('is-hidden'); }, 250);
   }
 
+  // Home-screen "Did you know?" card — a different cited fact each visit.
+  const insightText = document.getElementById('insightText');
+  const insightSrc = document.getElementById('insightSrc');
+  const insightCard = document.getElementById('insightCard');
+  let insightIdx = Math.floor(Math.random() * LOAD_FACTS.length);
+  function showInsight(){
+    const f = LOAD_FACTS[insightIdx++ % LOAD_FACTS.length];
+    insightCard.dataset.ref = f.ref;
+    insightText.classList.add('is-hidden');
+    setTimeout(function(){
+      insightText.textContent = f.text;
+      insightSrc.textContent = '[' + REFS[f.ref].num + '] ' + REFS[f.ref].label + '  \u2192';
+      insightText.classList.remove('is-hidden');
+    }, reduceMotion ? 0 : 200);
+  }
+  insightCard.addEventListener('click', function(){ openResearch(insightCard.dataset.ref); });
+
   const evidenceCard = document.getElementById('evidenceCard');
   function renderEvidence(r){
     const ev = EVIDENCE_BY_GROUP[r.group] || EVIDENCE_BY_GROUP.coherent;
@@ -2202,7 +3270,6 @@
     }
   }
 
-  document.getElementById('scienceBtn').addEventListener('click', function(){ openResearch(); });
   document.getElementById('scienceLink').addEventListener('click', function(){ openResearch(); });
   evidenceCard.addEventListener('click', function(){ openResearch(evidenceCard.dataset.ref); });
   document.querySelectorAll('.cite-chip').forEach(function(c){
@@ -2211,6 +3278,10 @@
   document.getElementById('researchBackBtn').addEventListener('click', function(){
     showScreen(researchReturnTo, true);
   });
+
+  // first paint of the home screen + a gently rotating prompt
+  onHomeShown();
+  if(!reduceMotion) promptTimer = setInterval(rotatePrompt, 5000);
 
   // initial fade-in of the mood selector on first load
   screens.select.classList.add('fade-in');
