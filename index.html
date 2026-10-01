@@ -179,10 +179,14 @@
     -webkit-overflow-scrolling:touch;
     opacity:1;
     transform:none;
-    transition:opacity 0.28s ease, transform 0.28s var(--ease);
+    transition:opacity 0.38s ease, transform 0.38s var(--ease);
   }
   .screen.active{display:flex;}
-  .screen.fade-out{opacity:0;transform:translateY(-6px);}
+  .screen.fade-out{
+    opacity:0;
+    transform:translateY(-6px);
+    transition-duration:0.24s;
+  }
   .screen.fade-in{opacity:0;transform:translateY(10px);}
 
   /* staggered entrance for blocks inside a freshly shown screen */
@@ -2057,6 +2061,9 @@
   };
   let screenAnimTimer = null;
   const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Every screen change cross-fades (out, swap, in) unless the caller passes
+  // animate === false or the user prefers reduced motion.
+  const SCREEN_FADE_OUT_MS = 240;           // matches .screen.fade-out
   function showScreen(name, animate){
     const next = screens[name];
     const current = Object.values(screens).find(function(s){ return s.classList.contains('active'); });
@@ -2064,7 +2071,7 @@
     clearTimeout(screenAnimTimer);
     if(name === 'select') onHomeShown();
 
-    if(!animate || !current || reduceMotion){
+    if(animate === false || !current || reduceMotion){
       Object.values(screens).forEach(function(s){ s.classList.remove('active','fade-out','fade-in'); });
       next.classList.add('active');
       next.scrollTop = name === 'research' ? next.scrollTop : 0;
@@ -2079,7 +2086,7 @@
       if(name !== 'research') next.scrollTop = 0;
       void next.offsetWidth;              // flush styles so the fade-in transitions
       next.classList.remove('fade-in');
-    }, 280);
+    }, SCREEN_FADE_OUT_MS);
   }
 
   // Replays the staggered entrance on a container's children.
@@ -2556,7 +2563,7 @@
       item.addEventListener('click', function(){
         currentReading = h;
         renderDashboard(h, false);
-        showScreen('dashboard', true);
+        showScreen('dashboard');
       });
       historyList.appendChild(item);
     });
@@ -2598,15 +2605,15 @@
   }
 
   // ---- navigation ----
-  document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select', true); });
-  document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select', true); });
+  document.getElementById('backBtn').addEventListener('click', function(){ showScreen('select'); });
+  document.getElementById('newReadingBtn').addEventListener('click', function(){ showScreen('select'); });
   function openHistory(){
     renderHistory();
-    showScreen('history', true);
+    showScreen('history');
   }
   document.getElementById('historyBtn').addEventListener('click', openHistory);
   document.getElementById('dashHistoryBtn').addEventListener('click', openHistory);
-  document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select', true); });
+  document.getElementById('historyBackBtn').addEventListener('click', function(){ showScreen('select'); });
 
   // Two-tap clear so a stray tap can't wipe the journey.
   const clearBtn = document.getElementById('clearHistoryBtn');
@@ -2686,7 +2693,7 @@
   document.getElementById('breatheBack').addEventListener('click', closeBreathing);
   document.getElementById('breatheLog').addEventListener('click', function(){
     closeBreathing();
-    showScreen('select', true);
+    showScreen('select');
   });
 
   // ---- Bluetooth watch pairing (Web Bluetooth — Heart Rate service) ----
@@ -3258,7 +3265,7 @@
     if(current && current !== 'research') researchReturnTo = current;
     const target = refKey && REFS[refKey] ? document.getElementById(REFS[refKey].id) : null;
     if(!target) researchScreen.scrollTop = 0;
-    showScreen('research', true);
+    showScreen('research');
     if(target){
       setTimeout(function(){
         target.classList.add('in');
@@ -3276,7 +3283,7 @@
     c.addEventListener('click', function(){ openResearch(c.dataset.ref); });
   });
   document.getElementById('researchBackBtn').addEventListener('click', function(){
-    showScreen(researchReturnTo, true);
+    showScreen(researchReturnTo);
   });
 
   // first paint of the home screen + a gently rotating prompt
