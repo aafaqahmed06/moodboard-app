@@ -17,6 +17,22 @@ Three-screen flow, built for a phone screen:
    from Table 1 on the poster), and a one-line interpretation. "Log another
    mood" returns to screen 1.
 
+**References.** A "Science" screen (topbar button, or "Read the science
+behind this" on the home screen) presents the paper's four references as
+animated cards, each tagged with the paper section it supports:
+
+1. Max Planck Institute (2025): *The heart thinks along with the mind*
+   (Villringer, Nikulin & Gaebler, *Trends in Neurosciences*): §1, §2, §5
+2. *The Female Heart: Sex Differences in the Dynamics of ECG in Response to
+   Stress*, Frontiers in Physiology (2018), PMC6279887: §3, §4a
+3. Norwest Chiropractic: *The Heart and Brain Connection*: §3
+4. Qur'an 26:192–194 and 53:11–12 (Arabic + English): §6
+
+The same references appear in context: a cited fact cycles on the loading
+screen, the dashboard shows an evidence card (ref 2 for incoherent moods,
+ref 1 for coherent ones), and the modulator panel carries a [3] citation.
+Tapping any of them jumps to that card.
+
 Each mood has a fixed coherence/HR *range* rather than a fixed number, so
 tapping the same mood twice gives slightly different but on-theme results —
 useful for repeated live demos.

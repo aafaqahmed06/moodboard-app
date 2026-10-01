@@ -6,7 +6,7 @@
 <title>Mood Board — Heart–Brain Axis Demo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --maroon:#6B1420;
@@ -373,6 +373,7 @@
     background:var(--paper);
     color:var(--ink-soft);
   }
+  .pattern-badge[hidden]{ display:none; }
   .pattern-badge.is-match{
     border-color:var(--coherent);
     color:var(--coherent);
@@ -634,6 +635,433 @@
   @media (prefers-reduced-motion:reduce){
     .toast{ transition:none; }
   }
+
+  /* ---- "Read the science" link on the home screen ---- */
+  .science-link{
+    align-self:center;
+    display:inline-flex;
+    align-items:center;
+    gap:0.45rem;
+    margin-top:0.7rem;
+    padding:0.3rem 0.4rem;
+    background:none;
+    border:none;
+    color:var(--maroon);
+    font-size:0.8rem;
+    font-weight:600;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .science-link-pulse{
+    position:relative;
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--gold);
+  }
+  .science-link-pulse::after{
+    content:"";
+    position:absolute;inset:0;
+    border-radius:50%;
+    background:var(--gold);
+    animation:btPulse 1.8s ease-out infinite;
+  }
+
+  /* ---- loading screen: cycling cited fact ---- */
+  .load-fact{
+    max-width:17rem;
+    min-height:3.2em;
+    margin:0;
+    font-size:0.76rem;
+    line-height:1.45;
+    color:var(--ink-soft);
+    transition:opacity 0.35s ease, transform 0.35s ease;
+  }
+  .load-fact.is-hidden{ opacity:0; transform:translateY(4px); }
+  .load-fact cite{
+    display:block;
+    margin-top:0.2rem;
+    font-style:normal;
+    font-size:0.66rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+
+  /* ---- dashboard: citation chip + evidence card ---- */
+  .panel-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:0.75rem;
+  }
+  .panel-head h2{ margin-bottom:0 !important; }
+  .cite-chip{
+    background:var(--cream);
+    border:1px solid var(--gold);
+    border-radius:4px;
+    color:var(--maroon);
+    font-size:0.66rem;
+    font-weight:700;
+    padding:0.05rem 0.35rem;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .evidence-card{
+    position:relative;
+    overflow:hidden;
+    width:100%;
+    text-align:left;
+    display:flex;
+    align-items:center;
+    gap:0.75rem;
+    background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);
+    color:var(--paper);
+    border:none;
+    border-radius:8px;
+    padding:0.75rem 0.9rem;
+    cursor:pointer;
+    touch-action:manipulation;
+    animation:evidenceIn 0.6s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .evidence-card::before{               /* slow sheen across the card */
+    content:"";
+    position:absolute;
+    top:0;bottom:0;left:-60%;
+    width:40%;
+    background:linear-gradient(90deg,transparent,rgba(228,201,137,0.22),transparent);
+    transform:skewX(-20deg);
+    animation:sheen 4.5s ease-in-out 0.8s infinite;
+  }
+  .evidence-card .ev-num{
+    flex:0 0 auto;
+    width:30px;height:30px;
+    border-radius:50%;
+    border:1.5px solid var(--gold);
+    color:var(--gold-soft);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Source Serif 4',serif;
+    font-weight:700;
+    font-size:0.9rem;
+  }
+  .evidence-card .ev-body{ flex:1; min-width:0; }
+  .evidence-card .ev-label{
+    display:block;
+    font-size:0.62rem;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+  }
+  .evidence-card .ev-text{ display:block; font-size:0.82rem; line-height:1.4; margin-top:0.15rem; }
+  .evidence-card .ev-arrow{ flex:0 0 auto; color:var(--gold-soft); font-size:1rem; }
+  .evidence-card:active{ filter:brightness(1.1); }
+  @keyframes evidenceIn{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:none; }
+  }
+  @keyframes sheen{
+    0%{ left:-60%; }
+    55%,100%{ left:130%; }
+  }
+
+  /* ---- Screen 5: the science ---- */
+  #screen-research .content{
+    padding:1rem 1.1rem calc(1.6rem + env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+  }
+  .reveal{
+    opacity:0;
+    transform:translateY(18px);
+    transition:opacity 0.6s ease, transform 0.6s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.in{ opacity:1; transform:none; }
+
+  .sci-hero{ text-align:center; }
+  .sci-eyebrow{
+    margin:0 0 0.25rem;
+    font-size:0.66rem;
+    font-weight:700;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+  }
+  .sci-hero h1{ font-size:1.3rem; line-height:1.25; }
+  .axis-svg{ width:100%; max-width:340px; display:block; margin:0.6rem auto 0.2rem; overflow:visible; }
+  .axis-path{
+    fill:none;
+    stroke-width:2.5;
+    stroke-linecap:round;
+    stroke-dasharray:6 7;
+    animation:dashFlow 1.1s linear infinite;
+  }
+  .axis-path.down{ animation-duration:1.3s; }
+  @keyframes dashFlow{ to{ stroke-dashoffset:-26; } }
+  .axis-node circle{ fill:var(--paper); stroke:var(--line); stroke-width:1.5; }
+  .axis-node text{ font-size:24px; }
+  .heart-node text{ fill:var(--maroon); }
+  .heart-node{ transform-box:fill-box; transform-origin:center; animation:heartbeat 1.2s ease-in-out infinite; }
+  .brain-node{ transform-box:fill-box; transform-origin:center; animation:brainGlow 2.4s ease-in-out infinite; }
+  .axis-label{ font-size:10px; font-weight:600; fill:var(--ink-soft); letter-spacing:0.04em; }
+  @keyframes heartbeat{
+    0%,100%{ transform:scale(1); }
+    12%{ transform:scale(1.12); }
+    24%{ transform:scale(0.98); }
+    36%{ transform:scale(1.07); }
+    50%{ transform:scale(1); }
+  }
+  @keyframes brainGlow{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.05); }
+  }
+  .sci-stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:0.5rem;
+    margin-top:0.4rem;
+  }
+  .sci-stat{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:0.55rem 0.4rem;
+  }
+  .sci-stat b{
+    display:block;
+    font-family:'Source Serif 4',serif;
+    font-size:1.15rem;
+    color:var(--maroon);
+    font-variant-numeric:tabular-nums;
+  }
+  .sci-stat span{ display:block; font-size:0.66rem; line-height:1.3; color:var(--ink-soft); margin-top:0.1rem; }
+
+  .ecg-divider{ width:100%; height:26px; display:block; }
+  .ecg-divider path{
+    fill:none;
+    stroke:var(--gold);
+    stroke-width:1.6;
+    stroke-linejoin:round;
+    stroke-dasharray:340;
+    stroke-dashoffset:340;
+    animation:ecgDraw 2.6s ease-in-out infinite;
+  }
+  @keyframes ecgDraw{
+    0%{ stroke-dashoffset:340; }
+    60%{ stroke-dashoffset:0; }
+    100%{ stroke-dashoffset:-340; }
+  }
+
+  .ref-card{
+    --accent:var(--maroon);
+    position:relative;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:0.95rem 1rem 0.85rem;
+    overflow:hidden;
+  }
+  .ref-card::before{                    /* accent bar grows in on reveal */
+    content:"";
+    position:absolute;
+    left:0;top:0;bottom:0;
+    width:4px;
+    background:var(--accent);
+    transform:scaleY(0);
+    transform-origin:top;
+    transition:transform 0.8s cubic-bezier(.2,.7,.2,1) 0.25s;
+  }
+  .ref-card.in::before{ transform:scaleY(1); }
+  .ref-card[data-accent="neuro"]{ --accent:#2F6F6B; }
+  .ref-card[data-accent="physio"]{ --accent:#B23A2E; }
+  .ref-card[data-accent="overview"]{ --accent:#C0762E; }
+  .ref-card[data-accent="theo"]{ --accent:var(--gold); }
+  .ref-top{ display:flex; align-items:center; gap:0.5rem; margin-bottom:0.45rem; }
+  .ref-num{
+    width:24px;height:24px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.74rem;
+    font-weight:700;
+  }
+  .ref-tag{
+    font-size:0.64rem;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .ref-card h2{ font-size:1.05rem; line-height:1.3; }
+  .ref-meta{ font-size:0.76rem; color:var(--ink-soft); margin:0.35rem 0 0.55rem; }
+  .ref-points{ margin:0; padding:0; list-style:none; }
+  .ref-points li{
+    position:relative;
+    padding-left:1.05rem;
+    font-size:0.83rem;
+    margin-bottom:0.4rem;
+    opacity:0;
+    transform:translateX(-6px);
+    transition:opacity 0.45s ease, transform 0.45s ease;
+  }
+  .ref-points li::before{
+    content:"";
+    position:absolute;
+    left:0;top:0.5em;
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--accent);
+  }
+  .ref-card.in .ref-points li{ opacity:1; transform:none; }
+  .ref-card.in .ref-points li:nth-child(1){ transition-delay:0.3s; }
+  .ref-card.in .ref-points li:nth-child(2){ transition-delay:0.45s; }
+  .ref-card.in .ref-points li:nth-child(3){ transition-delay:0.6s; }
+  .ref-foot{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:0.4rem 0.8rem;
+    margin-top:0.55rem;
+    padding-top:0.55rem;
+    border-top:1px dashed var(--line);
+  }
+  .ref-supports{ font-size:0.68rem; font-weight:600; color:var(--ink-soft); }
+  .ref-link{
+    font-size:0.74rem;
+    font-weight:700;
+    color:var(--accent);
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .ref-card.flash{ animation:refFlash 1.6s ease; }
+  @keyframes refFlash{
+    0%,100%{ box-shadow:0 0 0 0 rgba(201,154,62,0); }
+    25%{ box-shadow:0 0 0 4px rgba(201,154,62,0.55); }
+  }
+
+  /* ref 2: tiny HRV comparison trace */
+  .hrv-mini{
+    display:flex;
+    flex-direction:column;
+    gap:0.25rem;
+    margin-bottom:0.6rem;
+    padding:0.45rem 0.55rem;
+    background:var(--cream);
+    border-radius:8px;
+  }
+  .hrv-mini svg{ width:100%; height:38px; display:block; }
+  .hrv-mini path{
+    fill:none;
+    stroke-width:1.6;
+    stroke-linejoin:round;
+    stroke-dasharray:420;
+    stroke-dashoffset:420;
+  }
+  .hrv-f{ stroke:#2F6F6B; }
+  .hrv-m{ stroke:#B23A2E; opacity:0.85; }
+  .ref-card.in .hrv-f{ animation:traceIn 1.8s ease 0.3s forwards; }
+  .ref-card.in .hrv-m{ animation:traceIn 1.8s ease 0.6s forwards; }
+  @keyframes traceIn{ to{ stroke-dashoffset:0; } }
+  .hrv-key{ font-size:0.64rem; color:var(--ink-soft); display:flex; align-items:center; gap:0.3rem; }
+  .hrv-key i{ display:inline-block; width:12px; height:2px; border-radius:1px; }
+  .hrv-key .k-f{ background:#2F6F6B; }
+  .hrv-key .k-m{ background:#B23A2E; margin-left:0.5rem; }
+
+  /* ref 3: two communication channels */
+  .channel-row{ display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:0.6rem; }
+  .channel{
+    background:var(--cream);
+    border-radius:8px;
+    padding:0.5rem 0.55rem;
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    line-height:1.3;
+    opacity:0;
+    transform:scale(0.92);
+    transition:opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.7,.2,1);
+  }
+  .channel b{ display:block; color:var(--ink); font-size:0.78rem; }
+  .ch-icon{ display:block; font-size:1.05rem; margin-bottom:0.15rem; }
+  .ref-card.in .channel{ opacity:1; transform:none; transition-delay:0.2s; }
+  .ref-card.in .channel + .channel{ transition-delay:0.4s; }
+
+  /* ref 4: Qur'an card */
+  .quran-card{
+    background:
+      radial-gradient(circle at 0 0, rgba(201,154,62,0.16) 0 2px, transparent 3px) 0 0/18px 18px,
+      linear-gradient(160deg,var(--maroon) 0%,var(--maroon-dark) 100%);
+    border-color:var(--gold);
+    color:var(--paper);
+  }
+  .quran-card .ref-num{ color:var(--maroon-dark); }
+  .quran-card .ref-tag{ color:var(--gold-soft); }
+  .quran-card h2{ color:var(--paper); }
+  .quran-card .ref-meta{ color:rgba(246,241,231,0.78); }
+  .quran-card .ref-foot{ border-top-color:rgba(228,201,137,0.35); }
+  .quran-card .ref-supports{ color:var(--gold-soft); }
+  .ayah{
+    margin:0.4rem 0 0.8rem;
+    padding:0.8rem 0.85rem;
+    border:1px solid rgba(228,201,137,0.45);
+    border-radius:10px;
+    background:rgba(0,0,0,0.14);
+  }
+  .ayah-ar{
+    margin:0 0 0.6rem;
+    font-family:'Amiri',serif;
+    font-size:1.35rem;
+    line-height:2;
+    text-align:center;
+    color:var(--gold-soft);
+  }
+  .ayah-line{
+    display:block;
+    opacity:0;
+    filter:blur(4px);
+    transition:opacity 0.9s ease, filter 0.9s ease;
+  }
+  .ref-card.in .ayah-line{ opacity:1; filter:none; }
+  .ref-card.in .ayah-line:nth-child(1){ transition-delay:0.3s; }
+  .ref-card.in .ayah-line:nth-child(2){ transition-delay:0.9s; }
+  .ref-card.in .ayah-line:nth-child(3){ transition-delay:1.5s; }
+  .qalb{
+    color:#fff;
+    text-shadow:0 0 0 rgba(228,201,137,0);
+    animation:qalbGlow 3s ease-in-out infinite;
+  }
+  @keyframes qalbGlow{
+    0%,100%{ text-shadow:0 0 0 rgba(228,201,137,0); }
+    50%{ text-shadow:0 0 12px rgba(228,201,137,0.9); }
+  }
+  .ayah-en{
+    margin:0;
+    font-family:'Source Serif 4',serif;
+    font-style:italic;
+    font-size:0.84rem;
+    line-height:1.5;
+    color:var(--paper);
+  }
+  .ayah-en b{ color:var(--gold-soft); }
+  .ayah figcaption{
+    margin-top:0.45rem;
+    text-align:right;
+    font-size:0.7rem;
+    font-weight:600;
+    color:var(--gold-soft);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal,.ref-points li,.channel,.ayah-line{ opacity:1 !important; transform:none !important; filter:none !important; transition:none !important; }
+    .ref-card::before{ transform:none; transition:none; }
+    .axis-path,.heart-node,.brain-node,.ecg-divider path,.qalb,
+    .evidence-card,.evidence-card::before,.science-link-pulse::after{ animation:none !important; }
+    .ecg-divider path,.hrv-mini path{ stroke-dashoffset:0; animation:none !important; }
+    .axis-pulse{ display:none; }
+    .load-fact{ transition:none; }
+  }
 </style>
 </head>
 <body>
@@ -648,6 +1076,7 @@
       <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
       <div class="topbar-right">
         <span class="bt-dot" id="btDot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
+        <button class="back-btn" id="scienceBtn">Science</button>
         <button class="back-btn" id="historyBtn">History</button>
       </div>
     </div>
@@ -660,6 +1089,10 @@
         <span id="pairBtnLabel">Pair my watch</span>
       </button>
       <p class="pair-msg" id="pairMsg" role="status" aria-live="polite" hidden></p>
+      <button class="science-link" id="scienceLink" type="button">
+        <span class="science-link-pulse" aria-hidden="true"></span>
+        Read the science behind this <span aria-hidden="true">&rarr;</span>
+      </button>
       <p class="select-footnote">Demo — physiological readout is simulated, not measured</p>
     </div>
   </section>
@@ -674,6 +1107,7 @@
       </div>
       <p id="loadingStatus">Reading HRV signal&hellip;</p>
       <div class="load-bar"><div class="load-bar-fill"></div></div>
+      <p class="load-fact" id="loadFact" aria-live="polite"></p>
     </div>
   </section>
 
@@ -701,10 +1135,14 @@
       </div>
       <p class="pattern-badge" id="patternBadge" hidden></p>
       <div class="modulator-panel">
-        <h2>Biochemical modulators</h2>
+        <div class="panel-head">
+          <h2>Biochemical modulators</h2>
+          <button class="cite-chip" type="button" data-ref="norwest" aria-label="Source: Norwest Chiropractic, heart and brain connection">[3]</button>
+        </div>
         <div id="hormoneList"></div>
       </div>
       <div class="note-card" id="noteCard"></div>
+      <button class="evidence-card" id="evidenceCard" type="button"></button>
       <button class="new-reading-btn" id="newReadingBtn">Log another mood</button>
       <p class="demo-disclaimer">Rhythm, coherence, HR and modulator levels are computed from the selected mood category for demo purposes — not measured from a wearable device.</p>
     </div>
@@ -726,6 +1164,164 @@
       </div>
       <div id="historyList"></div>
       <p class="history-empty" id="historyEmpty">No moods logged yet. Log one from the home screen and it will appear here.</p>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: the science (references) -->
+  <section id="screen-research" class="screen">
+    <div class="topbar">
+      <span class="brand">Mood Board · Heart&ndash;Brain Demo</span>
+      <div class="topbar-right">
+        <span class="bt-dot" role="img" title="Watch: Not paired" aria-label="Watch status: Not paired"></span>
+        <button class="back-btn" id="researchBackBtn">Done</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="sci-hero reveal">
+        <p class="sci-eyebrow">The science</p>
+        <h1>A two-way dialogue between heart and brain</h1>
+        <svg class="axis-svg" viewBox="0 -10 320 152" role="img" aria-label="Diagram: signals travel from the heart to the brain and back again">
+          <defs>
+            <linearGradient id="axisUp" x1="0" x2="1">
+              <stop offset="0" stop-color="#B23A2E"/><stop offset="1" stop-color="#C99A3E"/>
+            </linearGradient>
+            <linearGradient id="axisDown" x1="1" x2="0">
+              <stop offset="0" stop-color="#2F6F6B"/><stop offset="1" stop-color="#C99A3E"/>
+            </linearGradient>
+          </defs>
+          <path id="pathUp" class="axis-path" d="M62 58 C 120 6, 200 6, 258 58" stroke="url(#axisUp)"/>
+          <path id="pathDown" class="axis-path down" d="M258 74 C 200 126, 120 126, 62 74" stroke="url(#axisDown)"/>
+          <circle class="axis-pulse" r="4" fill="#B23A2E">
+            <animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#pathUp"/></animateMotion>
+          </circle>
+          <circle class="axis-pulse" r="3" fill="#C99A3E">
+            <animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite"><mpath href="#pathUp"/></animateMotion>
+          </circle>
+          <circle class="axis-pulse" r="4" fill="#2F6F6B">
+            <animateMotion dur="2.8s" begin="0.6s" repeatCount="indefinite"><mpath href="#pathDown"/></animateMotion>
+          </circle>
+          <g class="axis-node heart-node">
+            <circle cx="40" cy="66" r="28"/>
+            <text x="40" y="74" text-anchor="middle">&#10084;</text>
+          </g>
+          <g class="axis-node brain-node">
+            <circle cx="280" cy="66" r="28"/>
+            <text x="280" y="75" text-anchor="middle">&#129504;</text>
+          </g>
+          <text class="axis-label" x="160" y="-1" text-anchor="middle">heart &rarr; brain</text>
+          <text class="axis-label" x="160" y="138" text-anchor="middle">brain &rarr; heart</text>
+        </svg>
+        <div class="sci-stats">
+          <div class="sci-stat"><b class="count-up" data-to="40000" data-suffix="+">0</b><span>neurons in the heart&rsquo;s &ldquo;little brain&rdquo;</span></div>
+          <div class="sci-stat"><b>2</b><span>channels: nerves &amp; hormones</span></div>
+          <div class="sci-stat"><b>4</b><span>key references</span></div>
+        </div>
+      </div>
+
+      <svg class="ecg-divider" viewBox="0 0 300 30" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 15 H95 L105 15 L112 3 L120 27 L128 9 L134 15 H300"/>
+      </svg>
+
+      <article class="ref-card reveal" id="ref-mpg" data-accent="neuro">
+        <div class="ref-top">
+          <span class="ref-num">1</span>
+          <span class="ref-tag">Neuroscience &middot; 2025</span>
+        </div>
+        <h2>The heart thinks along with the mind</h2>
+        <p class="ref-meta">Max Planck Institute for Human Cognitive and Brain Sciences, Leipzig &mdash; on Villringer, Nikulin &amp; Gaebler, <i>Brain&ndash;body states as a link between cardiovascular and mental health</i>, Trends in Neurosciences 48(10), 2025.</p>
+        <ul class="ref-points">
+          <li>The heart contains its own nerve cells and has a strong influence on thinking and feeling.</li>
+          <li>Proposes &ldquo;brain&ndash;body states&rdquo;: the central and autonomic nervous systems working as one with the endocrine and cardiovascular systems.</li>
+          <li>Offers an explanation for why cardiovascular and mental illnesses so often occur together.</li>
+        </ul>
+        <div class="ref-foot">
+          <span class="ref-supports">Supports &sect;1 Introduction &middot; &sect;2 ICNS &middot; &sect;5 Mental health</span>
+          <a class="ref-link" href="https://www.mpg.de/25454670/0925-nepf-the-heart-thinks-along-with-the-mind-149575-x" target="_blank" rel="noopener">Open source &nearr;</a>
+        </div>
+      </article>
+
+      <article class="ref-card reveal" id="ref-female" data-accent="physio">
+        <div class="ref-top">
+          <span class="ref-num">2</span>
+          <span class="ref-tag">Physiology &middot; 2018</span>
+        </div>
+        <h2>The Female Heart: Sex Differences in the Dynamics of ECG in Response to Stress</h2>
+        <p class="ref-meta">Frontiers in Physiology, 2018 &middot; open access via PubMed Central (PMC6279887).</p>
+        <div class="hrv-mini" aria-hidden="true">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <path class="hrv-f" d="M0 20 Q10 6 20 20 T40 20 T60 20 T80 20 T100 20 T120 20 T140 20 T160 20 T180 20 T200 20"/>
+            <path class="hrv-m" d="M0 22 L12 14 L20 28 L31 12 L42 26 L50 18 L63 30 L72 10 L84 24 L95 16 L108 28 L118 13 L130 25 L141 17 L153 29 L164 11 L176 23 L188 15 L200 22"/>
+          </svg>
+          <span class="hrv-key"><i class="k-f"></i>female <i class="k-m"></i>male</span>
+        </div>
+        <ul class="ref-points">
+          <li>Compared heart rate variability during mental-maths stress tests in 10 women and 10 men of similar ability.</li>
+          <li>Men and women showed different physiological responses to the same mental stress.</li>
+          <li>Ignoring sex differences fundamentally alters how the stress response is understood.</li>
+        </ul>
+        <div class="ref-foot">
+          <span class="ref-supports">Supports &sect;3 Gender-specific stress effects &middot; &sect;4a HRV collection</span>
+          <a class="ref-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6279887/" target="_blank" rel="noopener">Open source &nearr;</a>
+        </div>
+      </article>
+
+      <article class="ref-card reveal" id="ref-norwest" data-accent="overview">
+        <div class="ref-top">
+          <span class="ref-num">3</span>
+          <span class="ref-tag">Overview</span>
+        </div>
+        <h2>Your Feelings and your Health: The Heart and Brain Connection</h2>
+        <p class="ref-meta">Norwest Chiropractic, Auckland &mdash; general-audience article.</p>
+        <div class="channel-row" aria-hidden="true">
+          <div class="channel"><span class="ch-icon">&#9889;</span><b>Neurological</b><span>the heart&rsquo;s own neurons signal the brain</span></div>
+          <div class="channel"><span class="ch-icon">&#129514;</span><b>Biochemical</b><span>hormones carried in the bloodstream</span></div>
+        </div>
+        <ul class="ref-points">
+          <li>Heart and brain hold a two-way dialogue; emotions change the signals the brain sends to the heart, and the heart answers.</li>
+          <li>The heart behaves like an endocrine gland, releasing norepinephrine, epinephrine, dopamine and oxytocin.</li>
+        </ul>
+        <div class="ref-foot">
+          <span class="ref-supports">Supports &sect;3 Biochemical modulators &middot; the app&rsquo;s modulator panel</span>
+          <a class="ref-link" href="https://norwestchiro.co.nz/heart-and-brain-connection" target="_blank" rel="noopener">Open source &nearr;</a>
+        </div>
+      </article>
+
+      <article class="ref-card quran-card reveal" id="ref-quran" data-accent="theo">
+        <div class="ref-top">
+          <span class="ref-num">4</span>
+          <span class="ref-tag">Theological relevance</span>
+        </div>
+        <h2>The heart as the seat of revelation</h2>
+        <p class="ref-meta">The purpose of the opening of the chest of Prophet Muhammad &#xFDFA; was to purify his heart and prepare it to receive revelation directly from Allah.</p>
+
+        <figure class="ayah">
+          <p class="ayah-ar" lang="ar" dir="rtl">
+            <span class="ayah-line">وَإِنَّهُۥ لَتَنزِيلُ رَبِّ ٱلْعَٰلَمِينَ ﴿١٩٢﴾</span>
+            <span class="ayah-line">نَزَلَ بِهِ ٱلرُّوحُ ٱلْأَمِينُ ﴿١٩٣﴾</span>
+            <span class="ayah-line">عَلَىٰ <span class="qalb">قَلْبِكَ</span> لِتَكُونَ مِنَ ٱلْمُنذِرِينَ ﴿١٩٤﴾</span>
+          </p>
+          <blockquote class="ayah-en">&ldquo;And truly, this (the Qur&rsquo;an) is a revelation from the Lord of the &lsquo;Alamin (all living creatures in the Universe), which the trustworthy &ldquo;Rooh&rdquo; (Gabriel) has brought down, upon your <b>heart</b> (O Muhammad) that you may be (one) of the warners.&rdquo;</blockquote>
+          <figcaption>Surah Ash-Shu&lsquo;araa, 26:192&ndash;194</figcaption>
+        </figure>
+
+        <p class="ref-meta">The purification of his heart also enabled it to see the Greatest Signs of his Lord during the night journey, <i>Al-Isra wal-Mi&lsquo;raj</i>:</p>
+
+        <figure class="ayah">
+          <p class="ayah-ar" lang="ar" dir="rtl">
+            <span class="ayah-line">مَا كَذَبَ <span class="qalb">ٱلْفُؤَادُ</span> مَا رَأَىٰ ﴿١١﴾</span>
+            <span class="ayah-line">أَفَتُمَٰرُونَهُۥ عَلَىٰ مَا يَرَىٰ ﴿١٢﴾</span>
+          </p>
+          <blockquote class="ayah-en">&ldquo;The (Prophet&rsquo;s) <b>heart</b> lied not (in seeing) what he saw. Will you then dispute with him (Muhammad &#xFDFA;) about what he saw.&rdquo;</blockquote>
+          <figcaption>Surah An-Najm, 53:11&ndash;12</figcaption>
+        </figure>
+
+        <div class="ref-foot">
+          <span class="ref-supports">Supports &sect;6 Theological relevance</span>
+        </div>
+      </article>
+
+      <p class="demo-disclaimer">Section numbers refer to <i>Exploring the Heart&ndash;Brain Connection: Emotional Regulation through Cardiac Neurons and Wearable Technology</i> (Aarzu, Ghazali, Khan, Ahmed &mdash; NUST School of Health Sciences).</p>
     </div>
   </section>
 
@@ -756,7 +1352,8 @@
     select: document.getElementById('screen-select'),
     loading: document.getElementById('screen-loading'),
     dashboard: document.getElementById('screen-dashboard'),
-    history: document.getElementById('screen-history')
+    history: document.getElementById('screen-history'),
+    research: document.getElementById('screen-research')
   };
   let screenAnimTimer = null;
   const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -895,6 +1492,7 @@
     currentReading = Object.assign({}, m, {coherence:coherence, hr:hr, source:source});
 
     showScreen('loading');
+    showLoadFact();
     let i = 0;
     loadingStatus.textContent = statuses[0];
     clearInterval(statusTimer);
@@ -938,6 +1536,7 @@
 
     renderHormones(r);
     document.getElementById('noteCard').textContent = r.note;
+    renderEvidence(r);
     targetCoherence = r.coherence;
     if(!animRunning){
       animRunning = true;
@@ -1470,6 +2069,115 @@
       });
     });
   })();
+
+  // ---- References ("The science" screen + in-context citations) ----
+  // Numbered to match the cards on the research screen. `evidence` is the
+  // one-liner shown on the dashboard when that reference backs the reading.
+  const REFS = {
+    mpg:     {num:1, id:'ref-mpg',     label:'Max Planck Institute, 2025'},
+    female:  {num:2, id:'ref-female',  label:'Frontiers in Physiology, 2018'},
+    norwest: {num:3, id:'ref-norwest', label:'Norwest Chiropractic'},
+    quran:   {num:4, id:'ref-quran',   label:'Qur’an 26:192–194 · 53:11–12'}
+  };
+  const EVIDENCE_BY_GROUP = {
+    coherent:   {ref:'mpg',    text:'Heart and brain act as one “brain–body state” — calm states link cardiovascular and mental health.'},
+    incoherent: {ref:'female', text:'Mental stress reshapes heart-rate variability — and men and women respond differently.'}
+  };
+  const LOAD_FACTS = [
+    {ref:'mpg',     text:'The heart contains its own nerve cells and influences how we think and feel.'},
+    {ref:'female',  text:'HRV under mental stress differs between women and men of similar ability.'},
+    {ref:'norwest', text:'The heart acts like an endocrine gland, releasing oxytocin, epinephrine and dopamine.'},
+    {ref:'quran',   text:'“The heart lied not in what it saw.” — the heart as an organ of perception.'}
+  ];
+
+  const loadFact = document.getElementById('loadFact');
+  let loadFactIdx = Math.floor(Math.random() * LOAD_FACTS.length);
+  let loadFactTimer = null;
+  function showLoadFact(){
+    const f = LOAD_FACTS[loadFactIdx++ % LOAD_FACTS.length];
+    clearTimeout(loadFactTimer);
+    loadFact.classList.add('is-hidden');
+    loadFact.innerHTML = f.text + '<cite>[' + REFS[f.ref].num + '] ' + REFS[f.ref].label + '</cite>';
+    loadFactTimer = setTimeout(function(){ loadFact.classList.remove('is-hidden'); }, 250);
+  }
+
+  const evidenceCard = document.getElementById('evidenceCard');
+  function renderEvidence(r){
+    const ev = EVIDENCE_BY_GROUP[r.group] || EVIDENCE_BY_GROUP.coherent;
+    const ref = REFS[ev.ref];
+    evidenceCard.dataset.ref = ev.ref;
+    evidenceCard.innerHTML =
+      '<span class="ev-num">' + ref.num + '</span>' +
+      '<span class="ev-body"><span class="ev-label">What the research says · ' + ref.label + '</span>' +
+      '<span class="ev-text">' + ev.text + '</span></span>' +
+      '<span class="ev-arrow" aria-hidden="true">→</span>';
+    // restart the entrance animation on every render
+    evidenceCard.style.animation = 'none';
+    void evidenceCard.offsetWidth;
+    evidenceCard.style.animation = '';
+  }
+
+  // Scroll-triggered reveal on the research screen.
+  const researchScreen = screens.research;
+  const revealEls = researchScreen.querySelectorAll('.reveal');
+  let revealObserver = null;
+  if(!reduceMotion && 'IntersectionObserver' in window){
+    revealObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(!e.isIntersecting) return;
+        e.target.classList.add('in');
+        e.target.querySelectorAll('.count-up').forEach(countUp);
+        revealObserver.unobserve(e.target);
+      });
+    }, {root: researchScreen, threshold: 0.15});
+    revealEls.forEach(function(el){ revealObserver.observe(el); });
+  }else{
+    revealEls.forEach(function(el){
+      el.classList.add('in');
+      el.querySelectorAll('.count-up').forEach(function(c){
+        c.textContent = Number(c.dataset.to).toLocaleString() + (c.dataset.suffix || '');
+      });
+    });
+  }
+
+  function countUp(el){
+    const to = Number(el.dataset.to), suffix = el.dataset.suffix || '';
+    const start = performance.now(), dur = 1400;
+    (function tick(now){
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(to * eased).toLocaleString() + (t === 1 ? suffix : '');
+      if(t < 1) requestAnimationFrame(tick);
+    })(start);
+  }
+
+  let researchReturnTo = 'select';
+  function openResearch(refKey){
+    const current = Object.keys(screens).find(function(k){ return screens[k].classList.contains('active'); });
+    if(current && current !== 'research') researchReturnTo = current;
+    const target = refKey && REFS[refKey] ? document.getElementById(REFS[refKey].id) : null;
+    if(!target) researchScreen.scrollTop = 0;
+    showScreen('research', true);
+    if(target){
+      setTimeout(function(){
+        target.classList.add('in');
+        target.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth', block: 'start'});
+        target.classList.remove('flash');
+        void target.offsetWidth;
+        target.classList.add('flash');
+      }, reduceMotion ? 0 : 320);
+    }
+  }
+
+  document.getElementById('scienceBtn').addEventListener('click', function(){ openResearch(); });
+  document.getElementById('scienceLink').addEventListener('click', function(){ openResearch(); });
+  evidenceCard.addEventListener('click', function(){ openResearch(evidenceCard.dataset.ref); });
+  document.querySelectorAll('.cite-chip').forEach(function(c){
+    c.addEventListener('click', function(){ openResearch(c.dataset.ref); });
+  });
+  document.getElementById('researchBackBtn').addEventListener('click', function(){
+    showScreen(researchReturnTo, true);
+  });
 
   // initial fade-in of the mood selector on first load
   screens.select.classList.add('fade-in');
