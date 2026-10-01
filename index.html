@@ -1053,6 +1053,50 @@
     color:var(--gold-soft);
   }
 
+
+  /* compact reference cards */
+  .ref-card h2{ font-size:1.12rem; }
+  .ref-meta{ margin:0.15rem 0 0.7rem; font-size:0.74rem; font-weight:600; letter-spacing:0.02em; }
+  .ref-points{ display:flex; flex-direction:column; gap:0.4rem; }
+  .ref-points li{
+    display:flex; align-items:center; gap:0.6rem;
+    margin:0; padding:0.5rem 0.65rem;
+    background:var(--cream);
+    border-radius:8px;
+    font-size:0.84rem; font-weight:500;
+  }
+  .ref-points li::before{ content:none; }
+  .pt-icon{ flex:0 0 auto; width:1.4rem; text-align:center; font-size:1rem; }
+  .ref-foot{ flex-wrap:nowrap; margin-top:0.8rem; padding-top:0; border-top:none; }
+  .ref-supports{
+    font-size:0.66rem; font-weight:700; letter-spacing:0.04em;
+    color:var(--accent);
+    padding:0.2rem 0.5rem;
+    border:1px solid var(--accent);
+    border-radius:20px;
+    opacity:0.85;
+  }
+  .ref-link{
+    display:inline-flex; align-items:center; gap:0.35rem;
+    padding:0.45rem 0.9rem;
+    border-radius:20px;
+    background:var(--accent);
+    color:#fff;
+    font-size:0.76rem;
+    box-shadow:0 2px 8px rgba(0,0,0,0.12);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .ref-link:hover{ transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,0,0,0.18); }
+  .ref-link:active{ transform:scale(0.97); }
+  .channel-row{ margin-bottom:0; }
+  .channel{ text-align:center; padding:0.7rem 0.5rem; }
+  .ch-icon{ font-size:1.4rem; margin-bottom:0.25rem; }
+  .ayah{ margin:0 0 0.6rem; text-align:center; }
+  .ayah-ar{ font-size:1.28rem; margin-bottom:0.3rem; }
+  .quran-card h2{ margin-bottom:0.7rem; }
+  .ayah-en{ font-size:0.88rem; }
+  .ayah figcaption{ text-align:center; }
+  .quran-card .ref-supports{ color:var(--gold-soft); border-color:rgba(228,201,137,0.5); }
   @media (prefers-reduced-motion:reduce){
     .reveal,.ref-points li,.channel,.ayah-line{ opacity:1 !important; transform:none !important; filter:none !important; transition:none !important; }
     .ref-card::before{ transform:none; transition:none; }
@@ -1229,15 +1273,15 @@
           <span class="ref-tag">Neuroscience &middot; 2025</span>
         </div>
         <h2>The heart thinks along with the mind</h2>
-        <p class="ref-meta">Max Planck Institute for Human Cognitive and Brain Sciences, Leipzig &mdash; on Villringer, Nikulin &amp; Gaebler, <i>Brain&ndash;body states as a link between cardiovascular and mental health</i>, Trends in Neurosciences 48(10), 2025.</p>
+        <p class="ref-meta">Max Planck Institute</p>
         <ul class="ref-points">
-          <li>The heart contains its own nerve cells and has a strong influence on thinking and feeling.</li>
-          <li>Proposes &ldquo;brain&ndash;body states&rdquo;: the central and autonomic nervous systems working as one with the endocrine and cardiovascular systems.</li>
-          <li>Offers an explanation for why cardiovascular and mental illnesses so often occur together.</li>
+          <li><span class="pt-icon">&#129504;</span>The heart has its own nerve cells</li>
+          <li><span class="pt-icon">&#128173;</span>It shapes how we think and feel</li>
+          <li><span class="pt-icon">&#128279;</span>Links heart disease and mental illness</li>
         </ul>
         <div class="ref-foot">
-          <span class="ref-supports">Supports &sect;1 Introduction &middot; &sect;2 ICNS &middot; &sect;5 Mental health</span>
-          <a class="ref-link" href="https://www.mpg.de/25454670/0925-nepf-the-heart-thinks-along-with-the-mind-149575-x" target="_blank" rel="noopener">Open source &nearr;</a>
+          <span class="ref-supports">&sect;2 &middot; &sect;5</span>
+          <a class="ref-link" href="https://www.mpg.de/25454670/0925-nepf-the-heart-thinks-along-with-the-mind-149575-x" target="_blank" rel="noopener">Read article <span aria-hidden="true">&nearr;</span></a>
         </div>
       </article>
 
@@ -1246,8 +1290,8 @@
           <span class="ref-num">2</span>
           <span class="ref-tag">Physiology &middot; 2018</span>
         </div>
-        <h2>The Female Heart: Sex Differences in the Dynamics of ECG in Response to Stress</h2>
-        <p class="ref-meta">Frontiers in Physiology, 2018 &middot; open access via PubMed Central (PMC6279887).</p>
+        <h2>The Female Heart</h2>
+        <p class="ref-meta">Frontiers in Physiology &middot; ECG response to stress</p>
         <div class="hrv-mini" aria-hidden="true">
           <svg viewBox="0 0 200 40" preserveAspectRatio="none">
             <path class="hrv-f" d="M0 20 Q10 6 20 20 T40 20 T60 20 T80 20 T100 20 T120 20 T140 20 T160 20 T180 20 T200 20"/>
@@ -1256,13 +1300,12 @@
           <span class="hrv-key"><i class="k-f"></i>female <i class="k-m"></i>male</span>
         </div>
         <ul class="ref-points">
-          <li>Compared heart rate variability during mental-maths stress tests in 10 women and 10 men of similar ability.</li>
-          <li>Men and women showed different physiological responses to the same mental stress.</li>
-          <li>Ignoring sex differences fundamentally alters how the stress response is understood.</li>
+          <li><span class="pt-icon">&#128200;</span>Mental stress changes heart-rate variability</li>
+          <li><span class="pt-icon">&#9878;&#65039;</span>Men and women respond differently</li>
         </ul>
         <div class="ref-foot">
-          <span class="ref-supports">Supports &sect;3 Gender-specific stress effects &middot; &sect;4a HRV collection</span>
-          <a class="ref-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6279887/" target="_blank" rel="noopener">Open source &nearr;</a>
+          <span class="ref-supports">&sect;3 &middot; &sect;4a</span>
+          <a class="ref-link" href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6279887/" target="_blank" rel="noopener">Read paper <span aria-hidden="true">&nearr;</span></a>
         </div>
       </article>
 
@@ -1271,19 +1314,15 @@
           <span class="ref-num">3</span>
           <span class="ref-tag">Overview</span>
         </div>
-        <h2>Your Feelings and your Health: The Heart and Brain Connection</h2>
-        <p class="ref-meta">Norwest Chiropractic, Auckland &mdash; general-audience article.</p>
-        <div class="channel-row" aria-hidden="true">
-          <div class="channel"><span class="ch-icon">&#9889;</span><b>Neurological</b><span>the heart&rsquo;s own neurons signal the brain</span></div>
-          <div class="channel"><span class="ch-icon">&#129514;</span><b>Biochemical</b><span>hormones carried in the bloodstream</span></div>
+        <h2>The Heart and Brain Connection</h2>
+        <p class="ref-meta">Norwest Chiropractic</p>
+        <div class="channel-row">
+          <div class="channel"><span class="ch-icon">&#9889;</span><b>Nerves</b><span>heart &harr; brain signals</span></div>
+          <div class="channel"><span class="ch-icon">&#129514;</span><b>Hormones</b><span>oxytocin, adrenaline, dopamine</span></div>
         </div>
-        <ul class="ref-points">
-          <li>Heart and brain hold a two-way dialogue; emotions change the signals the brain sends to the heart, and the heart answers.</li>
-          <li>The heart behaves like an endocrine gland, releasing norepinephrine, epinephrine, dopamine and oxytocin.</li>
-        </ul>
         <div class="ref-foot">
-          <span class="ref-supports">Supports &sect;3 Biochemical modulators &middot; the app&rsquo;s modulator panel</span>
-          <a class="ref-link" href="https://norwestchiro.co.nz/heart-and-brain-connection" target="_blank" rel="noopener">Open source &nearr;</a>
+          <span class="ref-supports">&sect;3</span>
+          <a class="ref-link" href="https://norwestchiro.co.nz/heart-and-brain-connection" target="_blank" rel="noopener">Read article <span aria-hidden="true">&nearr;</span></a>
         </div>
       </article>
 
@@ -1293,35 +1332,29 @@
           <span class="ref-tag">Theological relevance</span>
         </div>
         <h2>The heart as the seat of revelation</h2>
-        <p class="ref-meta">The purpose of the opening of the chest of Prophet Muhammad &#xFDFA; was to purify his heart and prepare it to receive revelation directly from Allah.</p>
 
         <figure class="ayah">
           <p class="ayah-ar" lang="ar" dir="rtl">
-            <span class="ayah-line">وَإِنَّهُۥ لَتَنزِيلُ رَبِّ ٱلْعَٰلَمِينَ ﴿١٩٢﴾</span>
-            <span class="ayah-line">نَزَلَ بِهِ ٱلرُّوحُ ٱلْأَمِينُ ﴿١٩٣﴾</span>
             <span class="ayah-line">عَلَىٰ <span class="qalb">قَلْبِكَ</span> لِتَكُونَ مِنَ ٱلْمُنذِرِينَ ﴿١٩٤﴾</span>
           </p>
-          <blockquote class="ayah-en">&ldquo;And truly, this (the Qur&rsquo;an) is a revelation from the Lord of the &lsquo;Alamin (all living creatures in the Universe), which the trustworthy &ldquo;Rooh&rdquo; (Gabriel) has brought down, upon your <b>heart</b> (O Muhammad) that you may be (one) of the warners.&rdquo;</blockquote>
-          <figcaption>Surah Ash-Shu&lsquo;araa, 26:192&ndash;194</figcaption>
+          <blockquote class="ayah-en">&ldquo;Upon your <b>heart</b>, that you may be of the warners.&rdquo;</blockquote>
+          <figcaption>Ash-Shu&lsquo;araa 26:192&ndash;194</figcaption>
         </figure>
-
-        <p class="ref-meta">The purification of his heart also enabled it to see the Greatest Signs of his Lord during the night journey, <i>Al-Isra wal-Mi&lsquo;raj</i>:</p>
 
         <figure class="ayah">
           <p class="ayah-ar" lang="ar" dir="rtl">
             <span class="ayah-line">مَا كَذَبَ <span class="qalb">ٱلْفُؤَادُ</span> مَا رَأَىٰ ﴿١١﴾</span>
-            <span class="ayah-line">أَفَتُمَٰرُونَهُۥ عَلَىٰ مَا يَرَىٰ ﴿١٢﴾</span>
           </p>
-          <blockquote class="ayah-en">&ldquo;The (Prophet&rsquo;s) <b>heart</b> lied not (in seeing) what he saw. Will you then dispute with him (Muhammad &#xFDFA;) about what he saw.&rdquo;</blockquote>
-          <figcaption>Surah An-Najm, 53:11&ndash;12</figcaption>
+          <blockquote class="ayah-en">&ldquo;The <b>heart</b> lied not in what it saw.&rdquo;</blockquote>
+          <figcaption>An-Najm 53:11&ndash;12 &middot; Al-Isra wal-Mi&lsquo;raj</figcaption>
         </figure>
 
         <div class="ref-foot">
-          <span class="ref-supports">Supports &sect;6 Theological relevance</span>
+          <span class="ref-supports">&sect;6 &middot; A purified heart receives revelation</span>
         </div>
       </article>
 
-      <p class="demo-disclaimer">Section numbers refer to <i>Exploring the Heart&ndash;Brain Connection: Emotional Regulation through Cardiac Neurons and Wearable Technology</i> (Aarzu, Ghazali, Khan, Ahmed &mdash; NUST School of Health Sciences).</p>
+      <p class="demo-disclaimer">&sect; = section of the research paper</p>
     </div>
   </section>
 
